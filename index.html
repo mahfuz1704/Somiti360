@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="স্বপ্ন - সমিতি ম্যানেজমেন্ট সফটওয়্যার। সদস্যদের জমা, বিনিয়োগ এবং সহায়তা কার্যক্রম পরিচালনা করুন।">
+    <title>স্বপ্ন - সমিতি ম্যানেজমেন্ট</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">🌟</span>
+                <h1>স্বপ্ন</h1>
+            </div>
+            <p class="tagline">সমিতি ম্যানেজমেন্ট</p>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">ড্যাশবোর্ড</span>
+            </li>
+            <li class="nav-item" data-page="members">
+                <span class="nav-icon">👥</span>
+                <span class="nav-text">সদস্য</span>
+            </li>
+            <li class="nav-item" data-page="deposits">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">জমা</span>
+            </li>
+            <li class="nav-item" data-page="investments">
+                <span class="nav-icon">📈</span>
+                <span class="nav-text">বিনিয়োগ</span>
+            </li>
+            <li class="nav-item" data-page="donations">
+                <span class="nav-icon">🤝</span>
+                <span class="nav-text">সহায়তা</span>
+            </li>
+            <li class="nav-item" data-page="reports">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">রিপোর্ট</span>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <p>© ২০২৪ স্বপ্ন সমিতি</p>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h1>স্বপ্ন</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+
+        <!-- Dashboard Page -->
+        <section class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h2>ড্যাশবোর্ড</h2>
+                <p class="date-display" id="currentDate"></p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3 id="totalMembers">0</h3>
+                        <p>মোট সদস্য</p>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3 id="totalDeposits">৳০</h3>
+                        <p>মোট সঞ্চয়</p>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <h3 id="totalInvestments">৳০</h3>
+                        <p>মোট বিনিয়োগ</p>
+                    </div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-icon">💹</div>
+                    <div class="stat-info">
+                        <h3 id="totalProfit">৳০</h3>
+                        <p>মোট লাভ</p>
+                    </div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">🤝</div>
+                    <div class="stat-info">
+                        <h3 id="totalDonations">৳০</h3>
+                        <p>মোট সহায়তা</p>
+                    </div>
+                </div>
+                <div class="stat-card secondary">
+                    <div class="stat-icon">💵</div>
+                    <div class="stat-info">
+                        <h3 id="currentBalance">৳০</h3>
+                        <p>বর্তমান ব্যালেন্স</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card recent-activities">
+                    <h3>সাম্প্রতিক কার্যক্রম</h3>
+                    <ul id="recentActivities">
+                        <li class="empty-state">কোনো কার্যক্রম নেই</li>
+                    </ul>
+                </div>
+                <div class="card pending-deposits">
+                    <h3>বকেয়া জমা</h3>
+                    <ul id="pendingDepositsList">
+                        <li class="empty-state">কোনো বকেয়া নেই</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Members Page -->
+        <section class="page" id="page-members">
+            <div class="page-header">
+                <h2>সদস্য ব্যবস্থাপনা</h2>
+                <button class="btn btn-primary" id="addMemberBtn">
+                    <span>+</span> নতুন সদস্য
+                </button>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="memberSearch" placeholder="সদস্য খুঁজুন...">
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="data-table" id="membersTable">
+                        <thead>
+                            <tr>
+                                <th>ক্রমিক</th>
+                                <th>নাম</th>
+                                <th>ফোন</th>
+                                <th>যোগদান</th>
+                                <th>মোট জমা</th>
+                                <th>স্ট্যাটাস</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersList">
+                            <tr class="empty-row">
+                                <td colspan="7">কোনো সদস্য নেই</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deposits Page -->
+        <section class="page" id="page-deposits">
+            <div class="page-header">
+                <h2>জমা ব্যবস্থাপনা</h2>
+                <button class="btn btn-primary" id="addDepositBtn">
+                    <span>+</span> নতুন জমা
+                </button>
+            </div>
+
+            <div class="filter-bar">
+                <select id="depositMonthFilter">
+                    <option value="">সব মাস</option>
+                </select>
+                <select id="depositYearFilter">
+                    <option value="">সব বছর</option>
+                </select>
+                <select id="depositMemberFilter">
+                    <option value="">সব সদস্য</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="data-table" id="depositsTable">
+                        <thead>
+                            <tr>
+                                <th>তারিখ</th>
+                                <th>সদস্য</th>
+                                <th>মাস</th>
+                                <th>পরিমাণ</th>
+                                <th>স্ট্যাটাস</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depositsList">
+                            <tr class="empty-row">
+                                <td colspan="6">কোনো জমা নেই</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Investments Page -->
+        <section class="page" id="page-investments">
+            <div class="page-header">
+                <h2>বিনিয়োগ ব্যবস্থাপনা</h2>
+                <button class="btn btn-primary" id="addInvestmentBtn">
+                    <span>+</span> নতুন বিনিয়োগ
+                </button>
+            </div>
+
+            <div class="investment-summary">
+                <div class="summary-card">
+                    <h4>মোট বিনিয়োগ</h4>
+                    <p id="investmentTotal">৳০</p>
+                </div>
+                <div class="summary-card profit">
+                    <h4>মোট লাভ</h4>
+                    <p id="investmentProfit">৳০</p>
+                </div>
+                <div class="summary-card loss">
+                    <h4>মোট ক্ষতি</h4>
+                    <p id="investmentLoss">৳০</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="data-table" id="investmentsTable">
+                        <thead>
+                            <tr>
+                                <th>শিরোনাম</th>
+                                <th>ক্যাটাগরি</th>
+                                <th>পরিমাণ</th>
+                                <th>তারিখ</th>
+                                <th>লাভ/ক্ষতি</th>
+                                <th>স্ট্যাটাস</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="investmentsList">
+                            <tr class="empty-row">
+                                <td colspan="7">কোনো বিনিয়োগ নেই</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Donations Page -->
+        <section class="page" id="page-donations">
+            <div class="page-header">
+                <h2>সহায়তা কার্যক্রম</h2>
+                <button class="btn btn-primary" id="addDonationBtn">
+                    <span>+</span> নতুন সহায়তা
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="data-table" id="donationsTable">
+                        <thead>
+                            <tr>
+                                <th>তারিখ</th>
+                                <th>প্রাপকের নাম</th>
+                                <th>উদ্দেশ্য</th>
+                                <th>পরিমাণ</th>
+                                <th>বিবরণ</th>
+                                <th>অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donationsList">
+                            <tr class="empty-row">
+                                <td colspan="6">কোনো সহায়তা নেই</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Page -->
+        <section class="page" id="page-reports">
+            <div class="page-header">
+                <h2>রিপোর্ট</h2>
+            </div>
+
+            <div class="report-options">
+                <div class="report-card" id="memberReportBtn">
+                    <span class="report-icon">👤</span>
+                    <h3>সদস্য রিপোর্ট</h3>
+                    <p>একজন সদস্যের বিস্তারিত হিসাব</p>
+                </div>
+                <div class="report-card" id="monthlyReportBtn">
+                    <span class="report-icon">📅</span>
+                    <h3>মাসিক রিপোর্ট</h3>
+                    <p>মাসিক আয়-ব্যয়ের হিসাব</p>
+                </div>
+                <div class="report-card" id="yearlyReportBtn">
+                    <span class="report-icon">📊</span>
+                    <h3>বার্ষিক রিপোর্ট</h3>
+                    <p>বছরের সম্পূর্ণ হিসাব</p>
+                </div>
+            </div>
+
+            <div class="card report-output" id="reportOutput" style="display: none;">
+                <div class="report-header">
+                    <h3 id="reportTitle"></h3>
+                    <button class="btn btn-secondary" id="printReportBtn">🖨️ প্রিন্ট</button>
+                </div>
+                <div id="reportContent"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Forms -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">ফর্ম</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic form content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/storage.js"></script>
+    <script src="js/members.js"></script>
+    <script src="js/deposits.js"></script>
+    <script src="js/investments.js"></script>
+    <script src="js/donations.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/sample-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
