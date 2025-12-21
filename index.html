@@ -73,14 +73,20 @@
                 <p class="date-display" id="currentDate"></p>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-info">
-                        <h3 id="totalMembers">0</h3>
-                        <p>মোট সদস্য</p>
-                    </div>
+            <!-- Hero Section -->
+            <div class="balance-hero">
+                <div class="balance-content">
+                    <p class="label">বর্তমান ব্যালেন্স</p>
+                    <h1 id="currentBalance">৳০</h1>
+                    <p class="sub-label">সর্বশেষ আপডেট: <span id="lastUpdate">এখন</span></p>
                 </div>
+                <div class="balance-icon">
+                    ৳
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid compact">
                 <div class="stat-card success">
                     <div class="stat-icon">💰</div>
                     <div class="stat-info">
@@ -109,27 +115,68 @@
                         <p>মোট সহায়তা</p>
                     </div>
                 </div>
-                <div class="stat-card secondary">
-                    <div class="stat-icon">💵</div>
-                    <div class="stat-info">
-                        <h3 id="currentBalance">৳০</h3>
-                        <p>বর্তমান ব্যালেন্স</p>
-                    </div>
-                </div>
             </div>
 
-            <div class="dashboard-grid">
-                <div class="card recent-activities">
-                    <h3>সাম্প্রতিক কার্যক্রম</h3>
-                    <ul id="recentActivities">
-                        <li class="empty-state">কোনো কার্যক্রম নেই</li>
-                    </ul>
+            <!-- Dashboard Main Grid -->
+            <div class="dashboard-grid layout-2-1">
+                <!-- Left Column -->
+                <div class="dashboard-col">
+                    <!-- Monthly Overview -->
+                    <div class="card mb-4">
+                        <h3>চলতি মাসের হিসাব</h3>
+                        <div class="monthly-stats">
+                            <div class="monthly-card income">
+                                <div class="icon">⬇️</div>
+                                <div class="info">
+                                    <p>আয়</p>
+                                    <h4 id="monthlyIncome">৳০</h4>
+                                </div>
+                            </div>
+                            <div class="monthly-card expense">
+                                <div class="icon">⬆️</div>
+                                <div class="info">
+                                    <p>ব্যয়</p>
+                                    <h4 id="monthlyExpense">৳০</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <h3>দ্রুত অ্যাকশন</h3>
+                        <div class="quick-actions">
+                            <button class="action-tile"
+                                onclick="Navigation.showPage('deposits'); document.getElementById('addDepositBtn').click()">
+                                <span class="tile-icon">💰</span>
+                                <span class="tile-text">নতুন জমা</span>
+                            </button>
+                            <button class="action-tile"
+                                onclick="Navigation.showPage('members'); document.getElementById('addMemberBtn').click()">
+                                <span class="tile-icon">👤</span>
+                                <span class="tile-text">নতুন সদস্য</span>
+                            </button>
+                            <button class="action-tile"
+                                onclick="Navigation.showPage('investments'); document.getElementById('addInvestmentBtn').click()">
+                                <span class="tile-icon">📈</span>
+                                <span class="tile-text">নতুন বিনিয়োগ</span>
+                            </button>
+                            <button class="action-tile" onclick="Navigation.showPage('reports')">
+                                <span class="tile-icon">📊</span>
+                                <span class="tile-text">রিপোর্ট</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="card pending-deposits">
-                    <h3>বকেয়া জমা</h3>
-                    <ul id="pendingDepositsList">
-                        <li class="empty-state">কোনো বকেয়া নেই</li>
-                    </ul>
+
+                <!-- Right Column -->
+                <div class="dashboard-col">
+                    <div class="card recent-activities">
+                        <h3>সাম্প্রতিক কার্যক্রম</h3>
+                        <ul id="recentActivities">
+                            <li class="empty-state">কোনো কার্যক্রম নেই</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>

@@ -14,11 +14,12 @@ const Dashboard = {
 
     // Stats update
     updateStats: function () {
-        // মোট সদস্য
-        document.getElementById('totalMembers').textContent = Utils.formatNumber(Members.getCount());
+        // ওপেনিং ব্যালান্স কাউন্ট
+        const totalOpeningBalance = Members.getAll().reduce((sum, m) => sum + (m.openingBalance || 0), 0);
 
-        // মোট সঞ্চয়
-        document.getElementById('totalDeposits').textContent = Utils.formatCurrency(Deposits.getTotal());
+        // মোট সঞ্চয় (Deposits + Opening Balance)
+        const totalDeposits = Deposits.getTotal() + totalOpeningBalance;
+        document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
         // মোট বিনিয়োগ
         document.getElementById('totalInvestments').textContent = Utils.formatCurrency(Investments.getTotal());
@@ -31,8 +32,52 @@ const Dashboard = {
         document.getElementById('totalDonations').textContent = Utils.formatCurrency(Donations.getTotal());
 
         // বর্তমান ব্যালেন্স
-        const balance = Deposits.getTotal() + Investments.getTotalProfit() - Investments.getTotalLoss() - Donations.getTotal();
+        const balance = totalDeposits + totalProfit - Investments.getTotalLoss() - Donations.getTotal();
         document.getElementById('currentBalance').textContent = Utils.formatCurrency(balance);
+
+        // লাস্ট আপডেট
+        const now = new Date();
+        document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+
+        // মাসিক হিসাব (Monthly Overview)
+        const { month, year } = Utils.getCurrentMonthYear();
+
+        // Monthly Income
+        const mDeposits = Deposits.getByMonthYear(month, year).reduce((sum, d) => sum + d.amount, 0);
+
+        // Monthly Opening Balance (New Members)
+        const mNewMembers = Members.getAll().filter(m => {
+            const d = new Date(m.joinDate);
+            return d.getMonth() + 1 === month && d.getFullYear() === year;
+        });
+        const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+
+        const mProfit = Investments.getAllReturns().filter(r => {
+            const d = new Date(r.date);
+            return d.getMonth() + 1 === month && d.getFullYear() === year && r.type === 'profit';
+        }).reduce((sum, r) => sum + r.amount, 0);
+
+        const monthlyIncome = mDeposits + mOpeningBalance + mProfit;
+        document.getElementById('monthlyIncome').textContent = Utils.formatCurrency(monthlyIncome);
+
+        // Monthly Expense
+        const mInvestments = Investments.getAll().filter(i => {
+            const d = new Date(i.date);
+            return d.getMonth() + 1 === month && d.getFullYear() === year;
+        }).reduce((sum, i) => sum + i.amount, 0);
+
+        const mLoss = Investments.getAllReturns().filter(r => {
+            const d = new Date(r.date);
+            return d.getMonth() + 1 === month && d.getFullYear() === year && r.type === 'loss';
+        }).reduce((sum, r) => sum + r.amount, 0);
+
+        const mDonations = Donations.getAll().filter(d => {
+            const dt = new Date(d.date);
+            return dt.getMonth() + 1 === month && dt.getFullYear() === year;
+        }).reduce((sum, d) => sum + d.amount, 0);
+
+        const monthlyExpense = mInvestments + mLoss + mDonations;
+        document.getElementById('monthlyExpense').textContent = Utils.formatCurrency(monthlyExpense);
     },
 
     // Recent activities update

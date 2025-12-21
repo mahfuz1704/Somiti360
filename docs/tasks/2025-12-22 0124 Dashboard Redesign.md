@@ -1,0 +1,4 @@
+- [x] Dashboard Redesign (UI Upgrade)
+- [x] Remove `Total Members` card from Dashboard
+- [x] Add `Monthly Overview` (Monthly Income/Expense)
+- [x] Add `Quick Actions` section
