@@ -65,8 +65,12 @@ const Reports = {
                 <h4>জমার সারসংক্ষেপ</h4>
                 <div class="stats-grid" style="margin-bottom: 16px;">
                     <div class="summary-card">
-                        <h4>মোট জমা</h4>
-                        <p>${Utils.formatCurrency(totalDeposit)}</p>
+                        <h4>মোট জমা (ওপেনিং সহ)</h4>
+                        <p>${Utils.formatCurrency(totalDeposit + (member.openingBalance || 0))}</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>ওপেনিং ব্যালান্স</h4>
+                        <p>${Utils.formatCurrency(member.openingBalance || 0)}</p>
                     </div>
                     <div class="summary-card">
                         <h4>জমার সংখ্যা</h4>
@@ -161,6 +165,13 @@ const Reports = {
         });
         const totalDonation = monthDonations.reduce((sum, d) => sum + d.amount, 0);
 
+        // Opening Balance of new members in this month
+        const newMembers = Members.getAll().filter(m => {
+            const d = new Date(m.joinDate);
+            return d.getMonth() + 1 === month && d.getFullYear() === year;
+        });
+        const totalOpeningBalance = newMembers.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+
         // Pending members
         const allMembers = Members.getActive();
         const depositedMemberIds = deposits.map(d => d.memberId);
@@ -170,9 +181,11 @@ const Reports = {
             <div class="report-section">
                 <h4>আয়</h4>
                 <table class="data-table">
+                <table class="data-table">
                     <tr><td>মাসিক জমা (${Utils.formatNumber(deposits.length)} জন)</td><td style="text-align: right;">${Utils.formatCurrency(totalDeposit)}</td></tr>
+                    ${totalOpeningBalance > 0 ? `<tr><td>ওপেনিং ব্যালান্স (${Utils.formatNumber(newMembers.length)} জন নতুন)</td><td style="text-align: right;">${Utils.formatCurrency(totalOpeningBalance)}</td></tr>` : ''}
                     <tr><td>বিনিয়োগ লাভ</td><td style="text-align: right;">${Utils.formatCurrency(monthProfit)}</td></tr>
-                    <tr style="font-weight: bold; background: #f5f5f5;"><td>মোট আয়</td><td style="text-align: right;">${Utils.formatCurrency(totalDeposit + monthProfit)}</td></tr>
+                    <tr style="font-weight: bold; background: #f5f5f5;"><td>মোট আয়</td><td style="text-align: right;">${Utils.formatCurrency(totalDeposit + totalOpeningBalance + monthProfit)}</td></tr>
                 </table>
             </div>
             
@@ -191,7 +204,7 @@ const Reports = {
                 <div class="stats-grid">
                     <div class="summary-card">
                         <h4>নিট আয়</h4>
-                        <p>${Utils.formatCurrency((totalDeposit + monthProfit) - (totalNewInvestment + monthLoss + totalDonation))}</p>
+                        <p>${Utils.formatCurrency((totalDeposit + totalOpeningBalance + monthProfit) - (totalNewInvestment + monthLoss + totalDonation))}</p>
                     </div>
                     <div class="summary-card">
                         <h4>বকেয়া সদস্য</h4>
@@ -260,6 +273,10 @@ const Reports = {
         const allDonations = Donations.getAll().filter(d => new Date(d.date).getFullYear() === year);
         const totalDonations = allDonations.reduce((sum, d) => sum + d.amount, 0);
 
+        // Opening Balance for the year
+        const newMembersYear = Members.getAll().filter(m => new Date(m.joinDate).getFullYear() === year);
+        const totalOpeningBalance = newMembersYear.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+
         // Monthly breakdown
         const monthlyData = [];
         for (let m = 1; m <= 12; m++) {
@@ -269,9 +286,25 @@ const Reports = {
             const mLoss = mReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + r.amount, 0);
             const mDonations = allDonations.filter(d => new Date(d.date).getMonth() + 1 === m);
 
+            // Monthly opening balance
+            const mNewMembers = newMembersYear.filter(m => new Date(m.joinDate).getMonth() + 1 === m);
+            const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+
             monthlyData.push({
                 month: Utils.getMonthName(m - 1),
-                deposits: mDeposits.reduce((sum, d) => sum + d.amount, 0),
+                deposits: mDeposits.reduce((sum, d) => sum + d.amount, 0) + mOpeningBalance, // Including OB in deposits column or separate? Plan said "Add to Total Deposit summary". Let's verify requirement. 
+                // Plan: "Calculate total `openingBalance` ... Add to "Total Deposit" summary or separate line."
+                // For simplified view, I will add it to deposits but maybe it's better to separate.
+                // Re-reading code: The table has "Deposit", "Profit/Loss", "Donation", "Net". 
+                // I will add Opening Balance to "Deposit" column value for row, but keep it separate in total summary card.
+                // Wait, simply adding to deposits might be confusing if not labeled.
+                // Let's add it to the 'deposits' field here for the table logic.
+                // Actually, let's keep 'deposits' as actual deposits, and maybe add 'opening' field or just sum it up.
+                // Let's sum it up for the table row "Deposit" column for simplicity as "Income from members"
+
+                // Correction: Let's follow the plan "Verify totals include the opening balance".
+                depositsOnly: mDeposits.reduce((sum, d) => sum + d.amount, 0),
+                openingBalance: mOpeningBalance,
                 profit: mProfit - mLoss,
                 donations: mDonations.reduce((sum, d) => sum + d.amount, 0)
             });
@@ -282,8 +315,8 @@ const Reports = {
                 <h4>বার্ষিক সারসংক্ষেপ</h4>
                 <div class="stats-grid">
                     <div class="summary-card">
-                        <h4>মোট জমা</h4>
-                        <p>${Utils.formatCurrency(totalDeposits)}</p>
+                        <h4>মোট জমা (ওপেনিং সহ)</h4>
+                        <p>${Utils.formatCurrency(totalDeposits + totalOpeningBalance)}</p>
                     </div>
                     <div class="summary-card">
                         <h4>মোট বিনিয়োগ</h4>
@@ -317,18 +350,18 @@ const Reports = {
                             ${monthlyData.map(d => `
                                 <tr>
                                     <td>${d.month}</td>
-                                    <td>${Utils.formatCurrency(d.deposits)}</td>
+                                    <td>${Utils.formatCurrency(d.depositsOnly + d.openingBalance)}</td>
                                     <td>${Utils.formatCurrency(d.profit)}</td>
                                     <td>${Utils.formatCurrency(d.donations)}</td>
-                                    <td>${Utils.formatCurrency(d.deposits + d.profit - d.donations)}</td>
+                                    <td>${Utils.formatCurrency((d.depositsOnly + d.openingBalance) + d.profit - d.donations)}</td>
                                 </tr>
                             `).join('')}
                             <tr style="font-weight: bold; background: #f5f5f5;">
                                 <td>মোট</td>
-                                <td>${Utils.formatCurrency(totalDeposits)}</td>
+                                <td>${Utils.formatCurrency(totalDeposits + totalOpeningBalance)}</td>
                                 <td>${Utils.formatCurrency(totalProfit - totalLoss)}</td>
                                 <td>${Utils.formatCurrency(totalDonations)}</td>
-                                <td>${Utils.formatCurrency(totalDeposits + (totalProfit - totalLoss) - totalDonations)}</td>
+                                <td>${Utils.formatCurrency((totalDeposits + totalOpeningBalance) + (totalProfit - totalLoss) - totalDonations)}</td>
                             </tr>
                         </tbody>
                     </table>

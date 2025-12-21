@@ -1,0 +1,3 @@
+- [x] Member Report এ Opening Balance যোগ করা
+- [x] Monthly Report এ Opening Balance যোগ করা (Income হিসেবে)
+- [x] Yearly Report এ Opening Balance যোগ করা
