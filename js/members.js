@@ -22,7 +22,9 @@ const Members = {
         const newMember = {
             id: Utils.generateId(),
             name: memberData.name,
-            phone: memberData.phone || '',
+            phone: memberData.phone, // Mandatory now
+            designation: memberData.designation, // New field, Mandatory
+            openingBalance: parseFloat(memberData.openingBalance) || 0, // New field, Not editable later
             address: memberData.address || '',
             joinDate: memberData.joinDate || Utils.getCurrentDate(),
             status: 'active',
@@ -48,7 +50,8 @@ const Members = {
         members[index] = {
             ...members[index],
             name: memberData.name,
-            phone: memberData.phone || '',
+            phone: memberData.phone,
+            designation: memberData.designation,
             address: memberData.address || '',
             status: memberData.status || members[index].status,
             updatedAt: new Date().toISOString()
@@ -97,8 +100,10 @@ const Members = {
 
     // একজন সদস্যের মোট জমা
     getTotalDeposit: function (memberId) {
+        const member = this.getById(memberId);
+        const openingBalance = member?.openingBalance || 0;
         const deposits = Deposits.getByMember(memberId);
-        return deposits.reduce((sum, d) => sum + d.amount, 0);
+        return openingBalance + deposits.reduce((sum, d) => sum + d.amount, 0);
     },
 
     // Members table render
@@ -120,6 +125,7 @@ const Members = {
                 <tr>
                     <td>${Utils.formatNumber(index + 1)}</td>
                     <td><strong>${member.name}</strong></td>
+                    <td>${member.designation || '-'}</td>
                     <td>${member.phone || '-'}</td>
                     <td>${Utils.formatDateShort(member.joinDate)}</td>
                     <td>${Utils.formatCurrency(totalDeposit)}</td>
@@ -144,9 +150,20 @@ const Members = {
                     <label for="memberName">নাম *</label>
                     <input type="text" id="memberName" required placeholder="সদস্যের নাম">
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberPhone">ফোন নম্বর *</label>
+                        <input type="tel" id="memberPhone" required placeholder="০১XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="memberDesignation">পদবি *</label>
+                        <input type="text" id="memberDesignation" required placeholder="উদাহরণ: সভাপতি/সদস্য">
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label for="memberPhone">ফোন নম্বর</label>
-                    <input type="tel" id="memberPhone" placeholder="০১XXXXXXXXX">
+                    <label for="memberOpeningBalance">ওপেনিং ব্যালান্স (টাকা)</label>
+                    <input type="number" id="memberOpeningBalance" value="0" min="0" placeholder="0">
+                    <small class="form-text text-muted">সদস্য যোগ করার পর এটি আর পরিবর্তন করা যাবে না।</small>
                 </div>
                 <div class="form-group">
                     <label for="memberAddress">ঠিকানা</label>
@@ -177,9 +194,20 @@ const Members = {
                     <label for="memberName">নাম *</label>
                     <input type="text" id="memberName" required value="${member.name}" placeholder="সদস্যের নাম">
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberPhone">ফোন নম্বর *</label>
+                        <input type="tel" id="memberPhone" required value="${member.phone || ''}" placeholder="০১XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="memberDesignation">পদবি *</label>
+                        <input type="text" id="memberDesignation" required value="${member.designation || ''}" placeholder="পদবি">
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label for="memberPhone">ফোন নম্বর</label>
-                    <input type="tel" id="memberPhone" value="${member.phone || ''}" placeholder="০১XXXXXXXXX">
+                    <label>ওপেনিং ব্যালান্স</label>
+                    <input type="number" value="${member.openingBalance || 0}" disabled class="bg-light">
+                    <small class="form-text text-muted">ওপেনিং ব্যালান্স পরিবর্তনযোগ্য নয়।</small>
                 </div>
                 <div class="form-group">
                     <label for="memberAddress">ঠিকানা</label>
@@ -216,6 +244,9 @@ const Members = {
                     <strong>নাম:</strong> ${member.name}
                 </div>
                 <div class="detail-row">
+                    <strong>পদবি:</strong> ${member.designation || '-'}
+                </div>
+                <div class="detail-row">
                     <strong>ফোন:</strong> ${member.phone || '-'}
                 </div>
                 <div class="detail-row">
@@ -223,6 +254,9 @@ const Members = {
                 </div>
                 <div class="detail-row">
                     <strong>যোগদান:</strong> ${Utils.formatDate(member.joinDate)}
+                </div>
+                <div class="detail-row">
+                    <strong>ওপেনিং ব্যালান্স:</strong> ${Utils.formatCurrency(member.openingBalance || 0)}
                 </div>
                 <div class="detail-row">
                     <strong>মোট জমা:</strong> ${Utils.formatCurrency(totalDeposit)}
@@ -246,12 +280,14 @@ const Members = {
         const memberData = {
             name: document.getElementById('memberName').value.trim(),
             phone: document.getElementById('memberPhone').value.trim(),
+            designation: document.getElementById('memberDesignation').value.trim(),
             address: document.getElementById('memberAddress').value.trim(),
-            joinDate: document.getElementById('memberJoinDate').value
+            joinDate: document.getElementById('memberJoinDate').value,
+            openingBalance: document.getElementById('memberOpeningBalance').value
         };
 
-        if (!memberData.name) {
-            Utils.showToast('সদস্যের নাম দিন', 'error');
+        if (!memberData.name || !memberData.phone || !memberData.designation) {
+            Utils.showToast('দয়া করে নাম, ফোন নম্বর এবং পদবি পূরণ করুন', 'error');
             return;
         }
 
@@ -269,12 +305,13 @@ const Members = {
         const memberData = {
             name: document.getElementById('memberName').value.trim(),
             phone: document.getElementById('memberPhone').value.trim(),
+            designation: document.getElementById('memberDesignation').value.trim(),
             address: document.getElementById('memberAddress').value.trim(),
             status: document.getElementById('memberStatus').value
         };
 
-        if (!memberData.name) {
-            Utils.showToast('সদস্যের নাম দিন', 'error');
+        if (!memberData.name || !memberData.phone || !memberData.designation) {
+            Utils.showToast('দয়া করে নাম, ফোন নম্বর এবং পদবি পূরণ করুন', 'error');
             return;
         }
 

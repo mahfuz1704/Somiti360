@@ -1,0 +1,5 @@
+- [x] Member `designation` (পদবি) field add করা (Mandatory)
+- [x] Member `phone` (মোবাইল নাম্বার) field mandatory করা
+- [x] Member `openingBalance` (ওপেনিং ব্যালান্স) logic implement করা
+- [x] `openingBalance` edit option disable রাখা
+- [x] `Member` table এবং details view update করা
