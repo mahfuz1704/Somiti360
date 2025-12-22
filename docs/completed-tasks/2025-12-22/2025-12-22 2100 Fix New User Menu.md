@@ -1,0 +1,4 @@
+- [x] 'New User' menu/button issues fix করা
+    - [x] `Utils` object definition check করা (Found mismatch: showModal vs openModal)
+    - [x] `js/app.js` এ `Utils` object verify করা
+    - [x] `Users.js` dependencies check করা (Added STORAGE_KEYS.USERS)
