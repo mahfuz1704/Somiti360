@@ -290,7 +290,7 @@ const App = {
             </form>
         `;
 
-        Utils.showModal('নতুন ব্যবহারকারী', formHtml);
+        Utils.openModal('নতুন ব্যবহারকারী', formHtml);
 
         document.getElementById('addUserForm').addEventListener('submit', function (e) {
             e.preventDefault();
