@@ -82,7 +82,7 @@ const Dashboard = {
 
     // Recent activities update
     updateRecentActivities: function () {
-        const activities = Activities.getRecent(10);
+        const activities = Activities.getRecent(6);
         const container = document.getElementById('recentActivities');
 
         if (activities.length === 0) {
