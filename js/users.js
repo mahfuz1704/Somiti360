@@ -63,8 +63,6 @@ const Users = {
 
         users.push(user);
         Storage.save(STORAGE_KEYS.USERS, users);
-
-        Activities.add('user_add', `নতুন ব্যবহারকারী যোগ করা হয়েছে: ${user.name}`);
         return true;
     },
 
@@ -107,8 +105,6 @@ const Users = {
 
         users = users.filter(u => u.id !== id);
         Storage.save(STORAGE_KEYS.USERS, users);
-
-        Activities.add('user_delete', `ব্যবহারকারী মুছে ফেলা হয়েছে: ${user.name}`);
         return true;
     },
 

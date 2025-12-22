@@ -1,0 +1,2 @@
+- [x] সাম্প্রতিক কার্যক্রম থেকে ব্যবহারকারী যোগ করার নোটিফিকেশন বাদ দেওয়া
+    - [x] `js/users.js` থেকে `Activities.add('user_add', ...)` এবং `Activities.add('user_delete', ...)` সরিয়ে ফেলা
