@@ -9,12 +9,47 @@ const App = {
 
     // Initialize app
     init: function () {
-        this.setupNavigation();
-        this.setupEventListeners();
-        this.loadPage('dashboard');
-        Dashboard.refresh();
+        Auth.init(); // Auth Init First
+
+        if (Auth.checkSession()) {
+            this.setupNavigation();
+            this.setupEventListeners();
+
+            // Check current page permission
+            const page = this.currentPage;
+            if (Auth.hasPermission(page)) {
+                this.loadPage(page);
+            } else {
+                this.loadPage('dashboard');
+            }
+
+            Dashboard.refresh();
+        } else {
+            // Only setup login listener
+            this.setupLoginListener();
+        }
 
         console.log('স্বপ্ন সমিতি ম্যানেজমেন্ট সফটওয়্যার লোড হয়েছে');
+    },
+
+    // Login Listener
+    setupLoginListener: function () {
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+
+                const result = Auth.login(username, password);
+
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
     },
 
     // Navigation setup
@@ -24,11 +59,16 @@ const App = {
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.getAttribute('data-page');
-                this.loadPage(page);
 
-                // Mobile menu close
-                if (window.innerWidth <= 1024) {
-                    document.getElementById('sidebar').classList.remove('active');
+                if (Auth.hasPermission(page)) {
+                    this.loadPage(page);
+
+                    // Mobile menu close
+                    if (window.innerWidth <= 1024) {
+                        document.getElementById('sidebar').classList.remove('active');
+                    }
+                } else {
+                    Utils.showToast('আপনার এই পেইজে প্রবেশ করার অনুমতি নেই!', 'error');
                 }
             });
         });
@@ -58,6 +98,38 @@ const App = {
         document.getElementById('addInvestmentBtn').addEventListener('click', () => Investments.showAddForm());
         document.getElementById('addDonationBtn').addEventListener('click', () => Donations.showAddForm());
 
+        // User Management
+        const addUserBtn = document.getElementById('addUserBtn');
+        if (addUserBtn) addUserBtn.addEventListener('click', () => this.showAddUserForm());
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => Auth.logout());
+
+        // Profile Modal
+        const profileModal = document.getElementById('profileModalOverlay');
+        const openProfileBtn = document.getElementById('openProfileBtn');
+        const closeProfileBtn = document.getElementById('profileModalClose');
+
+        if (openProfileBtn) {
+            openProfileBtn.addEventListener('click', () => {
+                this.loadProfileData();
+                profileModal.classList.add('active');
+            });
+        }
+
+        if (closeProfileBtn) {
+            closeProfileBtn.addEventListener('click', () => profileModal.classList.remove('active'));
+        }
+
+        // Password Change
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handlePasswordChange();
+            });
+        }
+
         // Member search
         document.getElementById('memberSearch').addEventListener('input', function () {
             const query = this.value.trim();
@@ -83,6 +155,7 @@ const App = {
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 Utils.closeModal();
+                profileModal.classList.remove('active');
             }
         });
     },
@@ -131,9 +204,167 @@ const App = {
             case 'reports':
                 document.getElementById('reportOutput').style.display = 'none';
                 break;
+            case 'users':
+                this.renderUsersTable();
+                break;
+        }
+    },
+
+    // ----------------------------------------------------------------
+    // User Management Methods
+    // ----------------------------------------------------------------
+
+    renderUsersTable: function () {
+        const users = Users.getAll();
+        const tbody = document.getElementById('usersList');
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="6">কোনো ব্যবহারকারী নেই</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(user => {
+            // Permissions display
+            let perms = 'সব';
+            if (user.role !== 'superadmin' && !user.permissions.includes('all')) {
+                const map = {
+                    'members': 'সদস্য',
+                    'deposits': 'জমা',
+                    'investments': 'বিনিয়োগ',
+                    'donations': 'সহায়তা',
+                    'reports': 'রিপোর্ট'
+                };
+                perms = user.permissions.map(p => map[p] || p).join(', ');
+            }
+
+            return `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.username}</td>
+                    <td><span class="badge ${user.role === 'superadmin' ? 'badge-success' : 'badge-info'}">${user.role}</span></td>
+                    <td>${perms}</td>
+                    <td>${Utils.formatDateShort(user.createdAt)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${!user.isFixed ? `
+                                <button class="action-btn delete" onclick="App.deleteUser('${user.id}')" title="মুছে ফেলুন">🗑️</button>
+                            ` : '<span style="color:#ccc; font-size:0.8rem;">ফিক্সড</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    showAddUserForm: function () {
+        const formHtml = `
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label>নাম</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="form-group">
+                    <label>ইউজারনেম</label>
+                    <input type="text" id="userUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>পাসওয়ার্ড</label>
+                    <input type="password" id="userPassword" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>মেনু পারমিশন</label>
+                    <div class="permission-grid">
+                        <label class="permission-item"><input type="checkbox" name="perms" value="members" checked> সদস্য</label>
+                        <label class="permission-item"><input type="checkbox" name="perms" value="deposits" checked> জমা</label>
+                        <label class="permission-item"><input type="checkbox" name="perms" value="investments" checked> বিনিয়োগ</label>
+                        <label class="permission-item"><input type="checkbox" name="perms" value="donations" checked> সহায়তা</label>
+                        <label class="permission-item"><input type="checkbox" name="perms" value="reports" checked> রিপোর্ট</label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">বাতিল</button>
+                    <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+                </div>
+            </form>
+        `;
+
+        Utils.showModal('নতুন ব্যবহারকারী', formHtml);
+
+        document.getElementById('addUserForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Get selected permissions
+            const checkboxes = document.querySelectorAll('input[name="perms"]:checked');
+            const permissions = Array.from(checkboxes).map(cb => cb.value);
+
+            const newUser = {
+                name: document.getElementById('userName').value,
+                username: document.getElementById('userUsername').value,
+                password: document.getElementById('userPassword').value,
+                permissions: permissions
+            };
+
+            if (Users.add(newUser)) {
+                Utils.closeModal();
+                Utils.showToast('নতুন ব্যবহারকারী তৈরি হয়েছে', 'success');
+                App.renderUsersTable();
+            }
+        });
+    },
+
+    deleteUser: function (id) {
+        if (confirm('আপনি কি নিশ্চিত এই ব্যবহারকারীকে মুছে ফেলতে চান?')) {
+            if (Users.delete(id)) {
+                Utils.showToast('ব্যবহারকারী মুছে ফেলা হয়েছে', 'success');
+                this.renderUsersTable();
+            }
+        }
+    },
+
+    // Profile Helpers
+    loadProfileData: function () {
+        const user = Auth.getCurrentUser();
+        if (user) {
+            document.getElementById('profileName').textContent = user.name;
+            document.getElementById('profileRole').textContent = user.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন';
+        }
+    },
+
+    handlePasswordChange: function () {
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+
+        const user = Auth.getCurrentUser();
+        const fullUser = Users.getById(user.id); // Get with password
+
+        if (fullUser.password !== currentPass) {
+            Utils.showToast('বর্তমান পাসওয়ার্ড ভুল!', 'error');
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            Utils.showToast('নতুন পাসওয়ার্ড মিলছে না!', 'error');
+            return;
+        }
+
+        if (newPass.length < 4) {
+            Utils.showToast('পাসওয়ার্ড অন্তত ৪ অক্ষরের হতে হবে!', 'warning');
+            return;
+        }
+
+        if (Users.resetPassword(user.id, newPass)) {
+            Utils.showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে। আবার লগইন করুন।', 'success');
+            document.getElementById('profileModalOverlay').classList.remove('active');
+            Auth.logout();
         }
     }
 };
+
+// Global expose for onclick handlers
+window.App = App;
 
 // DOM Ready
 document.addEventListener('DOMContentLoaded', function () {

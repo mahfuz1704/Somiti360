@@ -935,6 +935,22 @@ body {
     gap: 24px;
 }
 
+.dashboard-col {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.recent-activities {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.recent-activities ul {
+    flex: 1;
+}
+
 @media (max-width: 1000px) {
     .dashboard-grid.layout-2-1 {
         grid-template-columns: 1fr;
@@ -1133,4 +1149,156 @@ body {
 ::selection {
     background: var(--primary);
     color: var(--white);
+}
+/* Login Section */
+.login-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
+
+.login-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-xl);
+    text-align: center;
+}
+
+.login-logo {
+    margin-bottom: 24px;
+}
+
+.login-logo .logo-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.login-logo h1 {
+    font-size: 2rem;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.login-logo p {
+    color: var(--gray-500);
+}
+
+.login-footer {
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--gray-400);
+}
+
+.user-profile-mini {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-profile-mini:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.user-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.user-info p {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.btn-logout {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.btn-logout:hover {
+    background: rgba(239, 68, 68, 0.8);
+    border-color: transparent;
+}
+
+/* User Management Styles */
+.permission-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    background: var(--gray-50);
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.permission-item input {
+    width: auto;
+}
+
+.profile-view {
+    text-align: center;
+}
+
+.profile-header-centered {
+    margin-bottom: 24px;
+}
+
+.profile-avatar-large {
+    width: 80px;
+    height: 80px;
+    background: var(--gray-100);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid var(--gray-200);
+    margin: 24px 0;
 }
