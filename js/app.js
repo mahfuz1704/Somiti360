@@ -492,6 +492,9 @@ const App = {
  */
 const Sidebar = {
     init: function () {
+        // Don't auto-collapse on mobile devices
+        if (window.innerWidth <= 1024) return;
+
         const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
         if (isCollapsed) {
             this.applyState(true);
