@@ -59,7 +59,7 @@ const Users = {
 
         user.id = Utils.generateId();
         user.createdAt = new Date().toISOString();
-        user.role = 'user'; // ডিফল্ট রোল
+        user.role = user.role || 'member'; // ডিফল্ট রোল member
 
         users.push(user);
         Storage.save(STORAGE_KEYS.USERS, users);

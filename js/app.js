@@ -241,7 +241,17 @@ const App = {
                 <tr>
                     <td>${user.name}</td>
                     <td>${user.username}</td>
-                    <td><span class="badge ${user.role === 'superadmin' ? 'badge-success' : 'badge-info'}">${user.role}</span></td>
+                    <td>
+                        <span class="badge ${user.role === 'superadmin' ? 'badge-success' :
+                    user.role === 'admin' ? 'badge-primary' :
+                        user.role === 'moderator' ? 'badge-info' : 'badge-secondary'
+                }">
+                            ${user.role === 'superadmin' ? 'সুপার অ্যাডমিন' :
+                    user.role === 'admin' ? 'অ্যাডমিন' :
+                        user.role === 'moderator' ? 'মডারেটর' : 'সদস্য'
+                }
+                        </span>
+                    </td>
                     <td>${perms}</td>
                     <td>${Utils.formatDateShort(user.createdAt)}</td>
                     <td>
@@ -270,6 +280,15 @@ const App = {
                 <div class="form-group">
                     <label>পাসওয়ার্ড</label>
                     <input type="password" id="userPassword" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>রোল (Role)</label>
+                    <select id="userRole" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="member">সদস্য (Member)</option>
+                        <option value="moderator">মডারেটর (Moderator)</option>
+                        <option value="admin">অ্যাডমিন (Admin)</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -303,6 +322,7 @@ const App = {
                 name: document.getElementById('userName').value,
                 username: document.getElementById('userUsername').value,
                 password: document.getElementById('userPassword').value,
+                role: document.getElementById('userRole').value,
                 permissions: permissions
             };
 

@@ -1,0 +1,4 @@
+- [x] 'New User' form এ Role Selection যোগ করা
+    - [x] `js/app.js` এ `showAddUserForm` এ Role Select dropdown যোগ করা (Admin, Moderator, Member)
+    - [x] `js/app.js` form submission এ `role` data capture করা
+    - [x] `js/users.js` এ `add` function update করা (passed role ব্যবহার করা)
