@@ -1223,18 +1223,27 @@ body {
     justify-content: center;
     cursor: pointer;
     font-size: 0.8rem;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1001;
-    transition: var(--transition);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .sidebar-toggle-btn:hover {
     background: var(--gray-50);
-    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    color: var(--primary-light);
 }
 
 .sidebar.collapsed .sidebar-toggle-btn {
     transform: rotate(180deg);
+}
+
+.sidebar.collapsed .sidebar-toggle-btn:hover {
+    transform: rotate(180deg) scale(1.15);
+}
+
+.sidebar-toggle-btn:not(.collapsed):hover {
+    transform: scale(1.15);
 }
 
 .user-profile-mini {
