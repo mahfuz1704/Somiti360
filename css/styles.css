@@ -1234,13 +1234,11 @@ body {
     color: var(--primary-light);
 }
 
-.sidebar.collapsed .sidebar-toggle-btn {
-    transform: rotate(180deg);
+.sidebar.collapsed .sidebar-toggle-btn:hover {
+    transform: scale(1.15);
 }
 
-.sidebar.collapsed .sidebar-toggle-btn:hover {
-    transform: rotate(180deg) scale(1.15);
-}
+
 
 .sidebar-toggle-btn:not(.collapsed):hover {
     transform: scale(1.15);
