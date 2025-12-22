@@ -10,6 +10,7 @@ const App = {
     // Initialize app
     init: function () {
         Auth.init(); // Auth Init First
+        Sidebar.init(); // Sidebar Init
 
         if (Auth.checkSession()) {
             this.setupNavigation();
@@ -92,6 +93,24 @@ const App = {
             });
         }
 
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            Sidebar.toggle();
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            Auth.logout();
+        });
+
+        // Logout icon in collapsed state
+        const sidebar = document.getElementById('sidebar');
+        sidebar.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('collapsed') && e.target.closest('.sidebar-footer')) {
+                Auth.logout();
+            }
+        });
+
         // Add buttons
         document.getElementById('addMemberBtn').addEventListener('click', () => Members.showAddForm());
         document.getElementById('addDepositBtn').addEventListener('click', () => Deposits.showAddForm());
@@ -101,9 +120,6 @@ const App = {
         // User Management
         const addUserBtn = document.getElementById('addUserBtn');
         if (addUserBtn) addUserBtn.addEventListener('click', () => this.showAddUserForm());
-
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => Auth.logout());
 
         // Profile Modal
         const profileModal = document.getElementById('profileModalOverlay');
@@ -459,6 +475,42 @@ const App = {
         }
     }
 };
+
+/**
+ * Sidebar Toggle Logic
+ */
+const Sidebar = {
+    init: function () {
+        const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+        if (isCollapsed) {
+            this.applyState(true);
+        }
+    },
+
+    toggle: function () {
+        const sidebar = document.getElementById('sidebar');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        this.applyState(!isCollapsed);
+        localStorage.setItem('sidebar_collapsed', !isCollapsed);
+    },
+
+    applyState: function (collapsed) {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleBtn = document.getElementById('sidebarToggle');
+
+        if (collapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+            if (toggleBtn) toggleBtn.textContent = '❯';
+        } else {
+            sidebar.classList.remove('collapsed');
+            mainContent.classList.remove('sidebar-collapsed');
+            if (toggleBtn) toggleBtn.textContent = '❮';
+        }
+    }
+};
+
 
 // Global expose for onclick handlers
 window.App = App;
