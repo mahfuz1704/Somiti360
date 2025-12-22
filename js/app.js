@@ -257,6 +257,7 @@ const App = {
                     <td>
                         <div class="action-buttons">
                             ${!user.isFixed ? `
+                                <button class="action-btn edit" onclick="App.showEditUserForm('${user.id}')" title="এডিট">📝</button>
                                 <button class="action-btn delete" onclick="App.deleteUser('${user.id}')" title="মুছে ফেলুন">🗑️</button>
                             ` : '<span style="color:#ccc; font-size:0.8rem;">ফিক্সড</span>'}
                         </div>
@@ -329,6 +330,82 @@ const App = {
             if (Users.add(newUser)) {
                 Utils.closeModal();
                 Utils.showToast('নতুন ব্যবহারকারী তৈরি হয়েছে', 'success');
+                App.renderUsersTable();
+            }
+        });
+    },
+
+    showEditUserForm: function (id) {
+        const user = Users.getById(id);
+        if (!user) return;
+
+        const formHtml = `
+            <form id="editUserForm">
+                <div class="form-group">
+                    <label>নাম</label>
+                    <input type="text" id="editUserName" value="${user.name}" required>
+                </div>
+                <div class="form-group">
+                    <label>ইউজারনেম</label>
+                    <input type="text" id="editUserUsername" value="${user.username}" ${user.isFixed ? 'disabled' : ''} required>
+                </div>
+                <div class="form-group">
+                    <label>পাসওয়ার্ড (বদল করতে চাইলে লিখুন)</label>
+                    <input type="password" id="editUserPassword" placeholder="পরিবর্তন না করলে খালি রাখুন">
+                </div>
+                
+                <div class="form-group">
+                    <label>রোল (Role)</label>
+                    <select id="editUserRole" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" ${user.isFixed ? 'disabled' : ''}>
+                        <option value="member" ${user.role === 'member' ? 'selected' : ''}>সদস্য (Member)</option>
+                        <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>মডারেটর (Moderator)</option>
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>অ্যাডমিন (Admin)</option>
+                        <option value="superadmin" ${user.role === 'superadmin' ? 'selected' : ''} disabled>সুপার অ্যাডমিন</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>মেনু পারমিশন</label>
+                    <div class="permission-grid">
+                        <label class="permission-item"><input type="checkbox" name="editPerms" value="members" ${user.permissions.includes('members') || user.permissions.includes('all') ? 'checked' : ''}> সদস্য</label>
+                        <label class="permission-item"><input type="checkbox" name="editPerms" value="deposits" ${user.permissions.includes('deposits') || user.permissions.includes('all') ? 'checked' : ''}> জমা</label>
+                        <label class="permission-item"><input type="checkbox" name="editPerms" value="investments" ${user.permissions.includes('investments') || user.permissions.includes('all') ? 'checked' : ''}> বিনিয়োগ</label>
+                        <label class="permission-item"><input type="checkbox" name="editPerms" value="donations" ${user.permissions.includes('donations') || user.permissions.includes('all') ? 'checked' : ''}> সহায়তা</label>
+                        <label class="permission-item"><input type="checkbox" name="editPerms" value="reports" ${user.permissions.includes('reports') || user.permissions.includes('all') ? 'checked' : ''}> রিপোর্ট</label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">বাতিল</button>
+                    <button type="submit" class="btn btn-primary">আপডেট করুন</button>
+                </div>
+            </form>
+        `;
+
+        Utils.openModal('ব্যবহারকারী এডিট', formHtml);
+
+        document.getElementById('editUserForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Get selected permissions
+            const checkboxes = document.querySelectorAll('input[name="editPerms"]:checked');
+            const permissions = Array.from(checkboxes).map(cb => cb.value);
+
+            const updatedData = {
+                name: document.getElementById('editUserName').value,
+                username: document.getElementById('editUserUsername').value,
+                role: document.getElementById('editUserRole').value,
+                permissions: permissions
+            };
+
+            const newPass = document.getElementById('editUserPassword').value;
+            if (newPass) {
+                updatedData.password = newPass;
+            }
+
+            if (Users.update(id, updatedData)) {
+                Utils.closeModal();
+                Utils.showToast('ব্যবহারকারী আপডেট করা হয়েছে', 'success');
                 App.renderUsersTable();
             }
         });
