@@ -67,6 +67,7 @@ const App = {
                     // Mobile menu close
                     if (window.innerWidth <= 1024) {
                         document.getElementById('sidebar').classList.remove('active');
+                        document.getElementById('sidebarOverlay').classList.remove('active');
                     }
                 } else {
                     Utils.showToast('আপনার এই পেইজে প্রবেশ করার অনুমতি নেই!', 'error');
@@ -87,9 +88,20 @@ const App = {
 
         // Mobile menu toggle
         const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
         if (menuToggle) {
             menuToggle.addEventListener('click', () => {
-                document.getElementById('sidebar').classList.toggle('active');
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
             });
         }
 
@@ -104,7 +116,6 @@ const App = {
         });
 
         // Logout icon in collapsed state
-        const sidebar = document.getElementById('sidebar');
         sidebar.addEventListener('click', (e) => {
             if (sidebar.classList.contains('collapsed') && e.target.closest('.sidebar-footer')) {
                 Auth.logout();
