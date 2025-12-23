@@ -8,6 +8,7 @@ const Dashboard = {
     refresh: async function () {
         await this.updateStats();
         await this.updateRecentActivities();
+        await this.updateRecentExpenses();
         await this.updateMonthlyDeposits();
         await this.updatePendingLoans();
         this.updateDate();
@@ -63,6 +64,33 @@ const Dashboard = {
                 </li>
             `;
         }).join('');
+    },
+
+    // Recent expenses update
+    updateRecentExpenses: async function () {
+        const expenses = await Expenses.getAll();
+        const recentExpenses = expenses.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+        const container = document.getElementById('recentExpenses');
+
+        if (!container) return;
+
+        if (recentExpenses.length === 0) {
+            container.innerHTML = '<li class="empty-state">কোনো খরচ নেই</li>';
+            return;
+        }
+
+        container.innerHTML = recentExpenses.map(expense => `
+            <li>
+                <div style="display: flex; flex-direction: column;">
+                    <span><strong>${expense.title}</strong></span>
+                    <small style="color: #666; font-size: 11px;">${expense.category}</small>
+                </div>
+                <div style="margin-left: auto; text-align: right;">
+                    <span style="display: block; font-weight: bold; color: #dc3545;">-${Utils.formatCurrency(expense.amount)}</span>
+                    <small style="color: #999; font-size: 11px;">${Utils.formatDateShort(expense.date)}</small>
+                </div>
+            </li>
+        `).join('');
     },
 
     // Activity icon
