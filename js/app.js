@@ -78,13 +78,9 @@ const App = {
 
     // Event listeners setup
     setupEventListeners: function () {
-        // Modal close
+        // Modal close - শুধু ক্রস বাটনে ক্লিক করলে বন্ধ হবে
         document.getElementById('modalClose').addEventListener('click', Utils.closeModal);
-        document.getElementById('modalOverlay').addEventListener('click', function (e) {
-            if (e.target === this) {
-                Utils.closeModal();
-            }
-        });
+        // বাহিরে ক্লিক করলে মডাল বন্ধ হবে না
 
         // Mobile menu toggle
         const menuToggle = document.getElementById('menuToggle');
@@ -180,13 +176,7 @@ const App = {
         document.getElementById('yearlyReportBtn').addEventListener('click', () => Reports.showYearlyReport());
         document.getElementById('printReportBtn').addEventListener('click', () => Reports.print());
 
-        // Escape key to close modal
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                Utils.closeModal();
-                profileModal.classList.remove('active');
-            }
-        });
+        // Escape key দিয়ে মডাল বন্ধ হবে না (শুধু ক্রস বা বাতিল বাটনে ক্লিক করতে হবে)
     },
 
     // Load page
