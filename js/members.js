@@ -22,9 +22,9 @@ const Members = {
             name: memberData.name,
             phone: memberData.phone,
             designation: memberData.designation,
-            openingBalance: parseFloat(memberData.openingBalance) || 0,
+            opening_balance: parseFloat(memberData.openingBalance) || 0,
             address: memberData.address || '',
-            joinDate: memberData.joinDate || Utils.getCurrentDate(),
+            join_date: memberData.joinDate || Utils.getCurrentDate(),
             status: 'active'
         };
 
@@ -93,7 +93,7 @@ const Members = {
     // একজন সদস্যের মোট জমা
     getTotalDeposit: async function (memberId) {
         const member = await this.getById(memberId);
-        const openingBalance = member?.openingBalance || 0;
+        const openingBalance = member?.opening_balance || 0;
         // Deposits module also needs update
         const deposits = await Deposits.getByMember(memberId);
         return openingBalance + deposits.reduce((sum, d) => sum + d.amount, 0);
@@ -123,7 +123,7 @@ const Members = {
                     <td><strong>${member.name}</strong></td>
                     <td>${member.designation || '-'}</td>
                     <td>${member.phone || '-'}</td>
-                    <td>${Utils.formatDateShort(member.joinDate)}</td>
+                    <td>${Utils.formatDateShort(member.join_date)}</td>
                     <td>${Utils.formatCurrency(totalDeposit)}</td>
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td>
@@ -204,7 +204,7 @@ const Members = {
                 </div>
                 <div class="form-group">
                     <label>ওপেনিং ব্যালান্স</label>
-                    <input type="number" value="${member.openingBalance || 0}" disabled class="bg-light">
+                    <input type="number" value="${member.opening_balance || 0}" disabled class="bg-light">
                     <small class="form-text text-muted">ওপেনিং ব্যালান্স পরিবর্তনযোগ্য নয়।</small>
                 </div>
                 <div class="form-group">
@@ -251,10 +251,10 @@ const Members = {
                     <strong>ঠিকানা:</strong> ${member.address || '-'}
                 </div>
                 <div class="detail-row">
-                    <strong>যোগদান:</strong> ${Utils.formatDate(member.joinDate)}
+                    <strong>যোগদান:</strong> ${Utils.formatDate(member.join_date)}
                 </div>
                 <div class="detail-row">
-                    <strong>ওপেনিং ব্যালান্স:</strong> ${Utils.formatCurrency(member.openingBalance || 0)}
+                    <strong>ওপেনিং ব্যালান্স:</strong> ${Utils.formatCurrency(member.opening_balance || 0)}
                 </div>
                 <div class="detail-row">
                     <strong>মোট জমা:</strong> ${Utils.formatCurrency(totalDeposit)}
