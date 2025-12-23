@@ -1,84 +1,74 @@
 /**
  * স্বপ্ন - Members Module
- * সদস্য ব্যবস্থাপনা
+ * সদস্য ব্যবস্থাপনা (Asynchronous for MySQL)
  */
 
 const Members = {
     // সব সদস্য লোড
-    getAll: function () {
-        return Storage.load(STORAGE_KEYS.MEMBERS) || [];
+    getAll: async function () {
+        return await Storage.load(STORAGE_KEYS.MEMBERS) || [];
     },
 
     // ID দিয়ে সদস্য খোঁজা
-    getById: function (id) {
-        const members = this.getAll();
+    getById: async function (id) {
+        const members = await this.getAll();
         return members.find(m => m.id === id);
     },
 
     // নতুন সদস্য যোগ
-    add: function (memberData) {
-        const members = this.getAll();
-
+    add: async function (memberData) {
         const newMember = {
             id: Utils.generateId(),
             name: memberData.name,
-            phone: memberData.phone, // Mandatory now
-            designation: memberData.designation, // New field, Mandatory
-            openingBalance: parseFloat(memberData.openingBalance) || 0, // New field, Not editable later
+            phone: memberData.phone,
+            designation: memberData.designation,
+            openingBalance: parseFloat(memberData.openingBalance) || 0,
             address: memberData.address || '',
             joinDate: memberData.joinDate || Utils.getCurrentDate(),
-            status: 'active',
-            createdAt: new Date().toISOString()
+            status: 'active'
         };
 
-        members.push(newMember);
-        Storage.save(STORAGE_KEYS.MEMBERS, members);
+        const success = await Storage.save(STORAGE_KEYS.MEMBERS, newMember);
 
-        // Activity log
-        Activities.add('member_add', `নতুন সদস্য যোগ হয়েছে: ${newMember.name}`);
+        if (success) {
+            // Activity log (Activities module also needs update, assuming it's async)
+            await Activities.add('member_add', `নতুন সদস্য যোগ হয়েছে: ${newMember.name}`);
+        }
 
-        return newMember;
+        return success ? newMember : null;
     },
 
     // সদস্য update
-    update: function (id, memberData) {
-        const members = this.getAll();
-        const index = members.findIndex(m => m.id === id);
-
-        if (index === -1) return null;
-
-        members[index] = {
-            ...members[index],
+    update: async function (id, memberData) {
+        // SQL-এ সরাসরি ID দিয়ে আপডেট করা ভালো, তবে এখানে বিদ্যমান প্যাটার্ন বজায় রাখা হচ্ছে
+        const updatedMember = {
+            id: id,
             name: memberData.name,
             phone: memberData.phone,
             designation: memberData.designation,
             address: memberData.address || '',
-            status: memberData.status || members[index].status,
-            updatedAt: new Date().toISOString()
+            status: memberData.status || 'active'
         };
 
-        Storage.save(STORAGE_KEYS.MEMBERS, members);
-        return members[index];
+        const success = await Storage.save(STORAGE_KEYS.MEMBERS, updatedMember);
+        return success ? updatedMember : null;
     },
 
     // সদস্য delete
-    delete: function (id) {
-        const members = this.getAll();
-        const member = members.find(m => m.id === id);
-        const filtered = members.filter(m => m.id !== id);
+    delete: async function (id) {
+        const member = await this.getById(id);
+        const success = await Storage.remove(STORAGE_KEYS.MEMBERS, id);
 
-        Storage.save(STORAGE_KEYS.MEMBERS, filtered);
-
-        if (member) {
-            Activities.add('member_delete', `সদস্য মুছে ফেলা হয়েছে: ${member.name}`);
+        if (success && member) {
+            await Activities.add('member_delete', `সদস্য মুছে ফেলা হয়েছে: ${member.name}`);
         }
 
-        return true;
+        return success;
     },
 
     // সদস্য search
-    search: function (query) {
-        const members = this.getAll();
+    search: async function (query) {
+        const members = await this.getAll();
         const q = query.toLowerCase();
 
         return members.filter(m =>
@@ -89,35 +79,41 @@ const Members = {
     },
 
     // Active সদস্য
-    getActive: function () {
-        return this.getAll().filter(m => m.status === 'active');
+    getActive: async function () {
+        const members = await this.getAll();
+        return members.filter(m => m.status === 'active');
     },
 
     // মোট সদস্য সংখ্যা
-    getCount: function () {
-        return this.getAll().length;
+    getCount: async function () {
+        const members = await this.getAll();
+        return members.length;
     },
 
     // একজন সদস্যের মোট জমা
-    getTotalDeposit: function (memberId) {
-        const member = this.getById(memberId);
+    getTotalDeposit: async function (memberId) {
+        const member = await this.getById(memberId);
         const openingBalance = member?.openingBalance || 0;
-        const deposits = Deposits.getByMember(memberId);
+        // Deposits module also needs update
+        const deposits = await Deposits.getByMember(memberId);
         return openingBalance + deposits.reduce((sum, d) => sum + d.amount, 0);
     },
 
     // Members table render
-    renderTable: function (members = null) {
+    renderTable: async function (members = null) {
         const tbody = document.getElementById('membersList');
-        const data = members || this.getAll();
+        if (!tbody) return;
+
+        const data = members || await this.getAll();
 
         if (data.length === 0) {
             tbody.innerHTML = '<tr class="empty-row"><td colspan="7">কোনো সদস্য নেই</td></tr>';
             return;
         }
 
-        tbody.innerHTML = data.map((member, index) => {
-            const totalDeposit = this.getTotalDeposit(member.id);
+        // Prepare table rows asynchronously
+        const rows = await Promise.all(data.map(async (member, index) => {
+            const totalDeposit = await this.getTotalDeposit(member.id);
             const statusClass = member.status === 'active' ? 'badge-success' : 'badge-warning';
             const statusText = member.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়';
 
@@ -139,7 +135,9 @@ const Members = {
                     </td>
                 </tr>
             `;
-        }).join('');
+        }));
+
+        tbody.innerHTML = rows.join('');
     },
 
     // Add form দেখানো
@@ -184,8 +182,8 @@ const Members = {
     },
 
     // Edit form দেখানো
-    edit: function (id) {
-        const member = this.getById(id);
+    edit: async function (id) {
+        const member = await this.getById(id);
         if (!member) return;
 
         const formHtml = `
@@ -231,12 +229,12 @@ const Members = {
     },
 
     // View member details
-    view: function (id) {
-        const member = this.getById(id);
+    view: async function (id) {
+        const member = await this.getById(id);
         if (!member) return;
 
-        const totalDeposit = this.getTotalDeposit(id);
-        const deposits = Deposits.getByMember(id);
+        const totalDeposit = await this.getTotalDeposit(id);
+        const deposits = await Deposits.getByMember(id);
 
         const detailsHtml = `
             <div class="member-details">
@@ -274,7 +272,7 @@ const Members = {
     },
 
     // Form submit handler
-    handleSubmit: function (event) {
+    handleSubmit: async function (event) {
         event.preventDefault();
 
         const memberData = {
@@ -291,15 +289,19 @@ const Members = {
             return;
         }
 
-        this.add(memberData);
-        Utils.closeModal();
-        this.renderTable();
-        Dashboard.refresh();
-        Utils.showToast('সদস্য সফলভাবে যোগ হয়েছে', 'success');
+        const success = await this.add(memberData);
+        if (success) {
+            Utils.closeModal();
+            await this.renderTable();
+            if (window.Dashboard) Dashboard.refresh();
+            Utils.showToast('সদস্য সফলভাবে যোগ হয়েছে', 'success');
+        } else {
+            Utils.showToast('সদস্য যোগ করতে ব্যর্থ হয়েছে', 'error');
+        }
     },
 
     // Update handler
-    handleUpdate: function (event, id) {
+    handleUpdate: async function (event, id) {
         event.preventDefault();
 
         const memberData = {
@@ -315,28 +317,37 @@ const Members = {
             return;
         }
 
-        this.update(id, memberData);
-        Utils.closeModal();
-        this.renderTable();
-        Utils.showToast('সদস্যের তথ্য আপডেট হয়েছে', 'success');
+        const success = await this.update(id, memberData);
+        if (success) {
+            Utils.closeModal();
+            await this.renderTable();
+            Utils.showToast('সদস্যের তথ্য আপডেট হয়েছে', 'success');
+        } else {
+            Utils.showToast('আপডেট করতে ব্যর্থ হয়েছে', 'error');
+        }
     },
 
     // Delete confirmation
-    confirmDelete: function (id) {
-        const member = this.getById(id);
+    confirmDelete: async function (id) {
+        const member = await this.getById(id);
         if (!member) return;
 
         if (Utils.confirm(`আপনি কি "${member.name}"-কে মুছে ফেলতে চান?`)) {
-            this.delete(id);
-            this.renderTable();
-            Dashboard.refresh();
-            Utils.showToast('সদস্য মুছে ফেলা হয়েছে', 'success');
+            const success = await this.delete(id);
+            if (success) {
+                await this.renderTable();
+                if (window.Dashboard) Dashboard.refresh();
+                Utils.showToast('সদস্য মুছে ফেলা হয়েছে', 'success');
+            } else {
+                Utils.showToast('মুছে ফেলতে ব্যর্থ হয়েছে', 'error');
+            }
         }
     },
 
     // Dropdown options for other modules
-    getOptions: function () {
-        return this.getActive().map(m =>
+    getOptions: async function () {
+        const activeMembers = await this.getActive();
+        return activeMembers.map(m =>
             `<option value="${m.id}">${m.name}</option>`
         ).join('');
     }

@@ -1,25 +1,34 @@
 /**
  * স্বপ্ন - Storage Module
- * LocalStorage ব্যবস্থাপনার জন্য helper functions
+ * MySQL API ব্যবস্থাপনার জন্য helper functions (Asynchronous)
  */
 
+const API_BASE_URL = 'http://localhost:3000/api';
+
 const Storage = {
-    // LocalStorage এ data save
-    save: function (key, data) {
+    // API এ data save
+    save: async function (key, data) {
         try {
-            localStorage.setItem(key, JSON.stringify(data));
-            return true;
+            const table = this._getTableFromKey(key);
+            const response = await fetch(`${API_BASE_URL}/${table}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            return response.ok;
         } catch (e) {
             console.error('Storage save error:', e);
             return false;
         }
     },
 
-    // LocalStorage থেকে data load
-    load: function (key) {
+    // API থেকে data load
+    load: async function (key) {
         try {
-            const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : null;
+            const table = this._getTableFromKey(key);
+            const response = await fetch(`${API_BASE_URL}/${table}`);
+            if (!response.ok) return null;
+            return await response.json();
         } catch (e) {
             console.error('Storage load error:', e);
             return null;
@@ -27,31 +36,32 @@ const Storage = {
     },
 
     // Data remove
-    remove: function (key) {
+    remove: async function (key, id) {
         try {
-            localStorage.removeItem(key);
-            return true;
+            const table = this._getTableFromKey(key);
+            const response = await fetch(`${API_BASE_URL}/${table}/${id}`, {
+                method: 'DELETE'
+            });
+            return response.ok;
         } catch (e) {
             console.error('Storage remove error:', e);
             return false;
         }
     },
 
-    // সম্পূর্ণ Storage clear
-    clear: function () {
-        try {
-            localStorage.clear();
-            return true;
-        } catch (e) {
-            console.error('Storage clear error:', e);
-            return false;
-        }
-    }
+    // Key থেকে table name বের করা
+    _getTableFromKey: function (key) {
+        return key.replace('shopno_', '');
+    },
+
+    // নোট: LocalStorage এর মতো clear() ফাংশন সরাসরি API তে নিরাপদ নয়। 
+    // তাই এটি বাদ দেওয়া হয়েছে বা প্রয়োজন অনুযায়ী ইমপ্লিমেন্ট করা যেতে পারে।
 };
 
 // Utility Functions
 const Utils = {
-    // Unique ID generate
+    // Unique ID generate (এখনও ক্লায়েন্ট সাইডে আইডি জেনারেট করা যেতে পারে, 
+    // তবে ডাটাবেসে সাধারণত অটো-ইনক্রিমেন্ট বা UUID ব্যবহার করা হয়)
     generateId: function () {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
@@ -116,6 +126,8 @@ const Utils = {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
 
+        if (!toast || !toastMessage) return;
+
         toast.className = 'toast ' + type;
         toastMessage.textContent = message;
         toast.classList.add('show');
@@ -131,6 +143,8 @@ const Utils = {
         const modalTitle = document.getElementById('modalTitle');
         const modalBody = document.getElementById('modalBody');
 
+        if (!overlay || !modalTitle || !modalBody) return;
+
         modalTitle.textContent = title;
         modalBody.innerHTML = content;
         overlay.classList.add('active');
@@ -139,7 +153,9 @@ const Utils = {
     // Modal বন্ধ করা
     closeModal: function () {
         const overlay = document.getElementById('modalOverlay');
-        overlay.classList.remove('active');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
     },
 
     // Confirm dialog
@@ -148,15 +164,15 @@ const Utils = {
     }
 };
 
-// Storage Keys
+// Storage Keys (Table names match)
 const STORAGE_KEYS = {
-    MEMBERS: 'shopno_members',
-    DEPOSITS: 'shopno_deposits',
-    INVESTMENTS: 'shopno_investments',
-    RETURNS: 'shopno_returns',
-    DONATIONS: 'shopno_donations',
-    ACTIVITIES: 'shopno_activities',
-    USERS: 'shopno_users'
+    MEMBERS: 'members',
+    DEPOSITS: 'deposits',
+    INVESTMENTS: 'investments',
+    RETURNS: 'investment_returns',
+    DONATIONS: 'donations',
+    ACTIVITIES: 'activities',
+    USERS: 'users'
 };
 
 // Default monthly deposit amount
