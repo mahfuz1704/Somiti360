@@ -168,55 +168,31 @@
                 <div class="dashboard-grid layout-2-1">
                     <!-- Left Column -->
                     <div class="dashboard-col">
-                        <!-- Monthly Overview -->
+                        <!-- চলতি মাসের হিসাব -->
                         <div class="card mb-4">
                             <h3>চলতি মাসের হিসাব</h3>
-                            <div class="monthly-stats">
-                                <div class="monthly-card income">
-                                    <div class="icon">⬇️</div>
-                                    <div class="info">
-                                        <p>আয়</p>
-                                        <h4 id="monthlyIncome">৳০</h4>
-                                    </div>
-                                </div>
-                                <div class="monthly-card expense">
-                                    <div class="icon">⬆️</div>
-                                    <div class="info">
-                                        <p>ব্যয়</p>
-                                        <h4 id="monthlyExpense">৳০</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- চলতি মাসের বকেয়া -->
-                        <div class="card">
-                            <h3>চলতি মাসের বকেয়া</h3>
-                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                                <table class="data-table" id="pendingDepositsTable">
+                            <div class="table-responsive">
+                                <table class="data-table" id="monthlyDepositsTable">
                                     <thead>
                                         <tr>
                                             <th>সদস্য</th>
                                             <th>পরিমাণ</th>
-                                            <th>অ্যাকশন</th>
+                                            <th>স্ট্যাটাস</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="pendingDepositsList">
+                                    <tbody id="monthlyDepositsList">
                                         <tr class="empty-row">
-                                            <td colspan="3">কোনো বকেয়া নেই</td>
+                                            <td colspan="3">কোনো সদস্য নেই</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Right Column -->
-                    <div class="dashboard-col">
                         <!-- বকেয়া লোন -->
                         <div class="card">
                             <h3>বকেয়া লোন</h3>
-                            <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <div class="table-responsive">
                                 <table class="data-table" id="pendingLoansTable">
                                     <thead>
                                         <tr>
@@ -233,7 +209,10 @@
                                 </table>
                             </div>
                         </div>
+                    </div>
 
+                    <!-- Right Column -->
+                    <div class="dashboard-col">
                         <div class="card recent-activities">
                             <h3>সাম্প্রতিক কার্যক্রম</h3>
                             <ul id="recentActivities">

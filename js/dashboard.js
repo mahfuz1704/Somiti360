@@ -120,30 +120,45 @@ const Dashboard = {
         return icons[type] || '📌';
     },
 
-    // Pending deposits update
-    updatePendingDeposits: async function () {
-        const pending = await Deposits.getPending();
-        const container = document.getElementById('pendingDepositsList');
-        const { month, year } = Utils.getCurrentMonthYear();
-
+    // Monthly Deposits Update (Full Statement)
+    updateMonthlyDeposits: async function () {
+        const container = document.getElementById('monthlyDepositsList');
         if (!container) return;
 
-        if (pending.length === 0) {
-            container.innerHTML = `<tr class="empty-row"><td colspan="3">কোনো বকেয়া নেই ✅</td></tr>`;
+        const { month, year } = Utils.getCurrentMonthYear();
+
+        // সব সদস্য এবং চলতি মাসের জমা লোড
+        const [members, deposits] = await Promise.all([
+            Members.getActive(),
+            Deposits.getByMonthYear(month, year)
+        ]);
+
+        if (members.length === 0) {
+            container.innerHTML = `<tr class="empty-row"><td colspan="3">কোনো সদস্য নেই</td></tr>`;
             return;
         }
 
-        container.innerHTML = pending.map(member => `
-            <tr>
-                <td><strong>${member.name}</strong></td>
-                <td>${Utils.formatCurrency(DEFAULT_DEPOSIT_AMOUNT)}</td>
-                <td>
-                    <button class="btn btn-primary btn-sm" onclick="Dashboard.collectDeposit('${member.id}', '${member.name}')" style="padding: 4px 12px; font-size: 12px;">
-                        আদায়
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        container.innerHTML = members.map(member => {
+            const deposit = deposits.find(d => d.member_id === member.id);
+            const isPaid = !!deposit;
+
+            return `
+                <tr>
+                    <td>
+                        <strong>${member.name}</strong>
+                    </td>
+                    <td>
+                        ${isPaid ? Utils.formatCurrency(deposit.amount) : Utils.formatCurrency(DEFAULT_DEPOSIT_AMOUNT)}
+                    </td>
+                    <td>
+                        ${isPaid
+                    ? `<span class="badge badge-success">পরিশোধিত ✅</span>`
+                    : `<button class="btn btn-primary btn-sm" onclick="Dashboard.collectDeposit('${member.id}', '${member.name}')" style="padding: 4px 12px; font-size: 12px;">আদায়</button>`
+                }
+                    </td>
+                </tr>
+            `;
+        }).join('');
     },
 
     // জমা আদায় - সরাসরি জমার ফর্ম ওপেন করা
