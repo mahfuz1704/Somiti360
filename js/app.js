@@ -127,6 +127,8 @@ const App = {
         document.getElementById('addDepositBtn').addEventListener('click', () => Deposits.showAddForm());
         document.getElementById('addInvestmentBtn').addEventListener('click', () => Investments.showAddForm());
         document.getElementById('addDonationBtn').addEventListener('click', () => Donations.showAddForm());
+        document.getElementById('addLoanBtn').addEventListener('click', () => Loans.showAddForm());
+        document.getElementById('addExpenseBtn').addEventListener('click', () => Expenses.showAddForm());
 
         // User Management
         const addUserBtn = document.getElementById('addUserBtn');
@@ -227,6 +229,13 @@ const App = {
                 break;
             case 'donations':
                 Donations.renderTable();
+                break;
+            case 'loans':
+                Loans.renderTable();
+                break;
+            case 'expenses':
+                Expenses.populateFilters();
+                Expenses.renderTable();
                 break;
             case 'reports':
                 document.getElementById('reportOutput').style.display = 'none';

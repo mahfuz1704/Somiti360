@@ -16,20 +16,21 @@ const Users = {
         createdAt: new Date().toISOString()
     },
 
-    // সব ইউজার লোড
+    // সব ইউজার লোড (সিঙ্ক্রোনাস - localStorage থেকে)
     getAll: function () {
-        let users = Storage.load(STORAGE_KEYS.USERS);
+        // Authentication এর জন্য localStorage থেকে সিঙ্ক্রোনাস রিড
+        let users = JSON.parse(localStorage.getItem('shopno_users') || '[]');
 
         // প্রথমবার লোড হলে ডিফল্ট ইউজার সেট করা
         if (!users || users.length === 0) {
             users = [this.defaultUser];
-            Storage.save(STORAGE_KEYS.USERS, users);
+            localStorage.setItem('shopno_users', JSON.stringify(users));
         } else {
             // মাইগ্রেশন চেক: যদি পুরনো 'admin' ইউজারনেম থাকে
             const superAdmin = users.find(u => u.id === 'superadmin');
             if (superAdmin && superAdmin.username === 'admin') {
                 superAdmin.username = 'superadmin';
-                Storage.save(STORAGE_KEYS.USERS, users);
+                localStorage.setItem('shopno_users', JSON.stringify(users));
                 console.log('Superadmin username migrated to "superadmin"');
             }
         }
@@ -62,7 +63,7 @@ const Users = {
         user.role = user.role || 'member'; // ডিফল্ট রোল member
 
         users.push(user);
-        Storage.save(STORAGE_KEYS.USERS, users);
+        localStorage.setItem('shopno_users', JSON.stringify(users));
         return true;
     },
 
@@ -87,7 +88,7 @@ const Users = {
         }
 
         users[index] = { ...users[index], ...updatedData };
-        Storage.save(STORAGE_KEYS.USERS, users);
+        localStorage.setItem('shopno_users', JSON.stringify(users));
         return true;
     },
 
@@ -104,7 +105,7 @@ const Users = {
         }
 
         users = users.filter(u => u.id !== id);
-        Storage.save(STORAGE_KEYS.USERS, users);
+        localStorage.setItem('shopno_users', JSON.stringify(users));
         return true;
     },
 
@@ -115,7 +116,7 @@ const Users = {
 
         if (user) {
             user.password = newPassword;
-            Storage.save(STORAGE_KEYS.USERS, users);
+            localStorage.setItem('shopno_users', JSON.stringify(users));
             return true;
         }
         return false;

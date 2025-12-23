@@ -41,7 +41,7 @@ const asyncHandler = (fn) => (req, res, next) => {
 app.get('/api/:table', asyncHandler(async (req, res) => {
     const { table } = req.params;
     // Basic protection against SQL injection (for demonstration)
-    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities'];
+    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Invalid table name' });
     }
@@ -52,7 +52,7 @@ app.get('/api/:table', asyncHandler(async (req, res) => {
 // Generic POST for any table
 app.post('/api/:table', asyncHandler(async (req, res) => {
     const { table } = req.params;
-    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities'];
+    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Invalid table name' });
     }
@@ -65,7 +65,7 @@ app.post('/api/:table', asyncHandler(async (req, res) => {
 // Generic DELETE for any table
 app.delete('/api/:table/:id', asyncHandler(async (req, res) => {
     const { table, id } = req.params;
-    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities'];
+    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Invalid table name' });
     }

@@ -80,6 +80,14 @@
                     <span class="nav-icon">🤝</span>
                     <span class="nav-text">সহায়তা</span>
                 </li>
+                <li class="nav-item" data-page="loans">
+                    <span class="nav-icon">💸</span>
+                    <span class="nav-text">লোন</span>
+                </li>
+                <li class="nav-item" data-page="expenses">
+                    <span class="nav-icon">💵</span>
+                    <span class="nav-text">খরচ</span>
+                </li>
                 <li class="nav-item" data-page="reports">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">রিপোর্ট</span>
@@ -382,6 +390,106 @@
                 </div>
             </section>
 
+            <!-- Loans Page -->
+            <section class="page" id="page-loans">
+                <div class="page-header">
+                    <h2>লোন ব্যবস্থাপনা</h2>
+                    <button class="btn btn-primary" id="addLoanBtn">
+                        <span>+</span> নতুন লোন
+                    </button>
+                </div>
+
+                <div class="investment-summary">
+                    <div class="summary-card">
+                        <h4>মোট লোন বিতরণ</h4>
+                        <p id="loanTotal">৳০</p>
+                    </div>
+                    <div class="summary-card profit">
+                        <h4>মোট আদায়</h4>
+                        <p id="loanCollected">৳০</p>
+                    </div>
+                    <div class="summary-card loss">
+                        <h4>বকেয়া</h4>
+                        <p id="loanOutstanding">৳০</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table" id="loansTable">
+                            <thead>
+                                <tr>
+                                    <th>সদস্য</th>
+                                    <th>পরিমাণ</th>
+                                    <th>সুদ</th>
+                                    <th>মেয়াদ</th>
+                                    <th>তারিখ</th>
+                                    <th>বকেয়া</th>
+                                    <th>স্ট্যাটাস</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loansList">
+                                <tr class="empty-row">
+                                    <td colspan="8">কোনো লোন নেই</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expenses Page -->
+            <section class="page" id="page-expenses">
+                <div class="page-header">
+                    <h2>খরচ ব্যবস্থাপনা</h2>
+                    <button class="btn btn-primary" id="addExpenseBtn">
+                        <span>+</span> নতুন খরচ
+                    </button>
+                </div>
+
+                <div class="filter-bar">
+                    <select id="expenseMonthFilter" onchange="Expenses.renderFiltered()">
+                        <option value="">সব মাস</option>
+                    </select>
+                    <select id="expenseYearFilter" onchange="Expenses.renderFiltered()">
+                        <option value="">সব বছর</option>
+                    </select>
+                    <select id="expenseCategoryFilter" onchange="Expenses.renderFiltered()">
+                        <option value="">সব ক্যাটাগরি</option>
+                    </select>
+                </div>
+
+                <div class="investment-summary">
+                    <div class="summary-card loss">
+                        <h4>মোট খরচ</h4>
+                        <p id="expenseTotal">৳০</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table" id="expensesTable">
+                            <thead>
+                                <tr>
+                                    <th>তারিখ</th>
+                                    <th>শিরোনাম</th>
+                                    <th>ক্যাটাগরি</th>
+                                    <th>পরিমাণ</th>
+                                    <th>বিবরণ</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesList">
+                                <tr class="empty-row">
+                                    <td colspan="6">কোনো খরচ নেই</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- Reports Page -->
             <section class="page" id="page-reports">
                 <div class="page-header">
@@ -512,6 +620,8 @@
     <script src="js/deposits.js"></script>
     <script src="js/investments.js"></script>
     <script src="js/donations.js"></script>
+    <script src="js/loans.js"></script>
+    <script src="js/expenses.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/reports.js"></script>
     <script src="js/migration.js"></script>

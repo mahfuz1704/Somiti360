@@ -81,3 +81,42 @@ CREATE TABLE IF NOT EXISTS activities (
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+-- Loans table (সদস্যদের লোন)
+CREATE TABLE IF NOT EXISTS loans (
+    id VARCHAR(50) PRIMARY KEY,
+    member_id VARCHAR(50) NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    interest_rate DECIMAL(5, 2) DEFAULT 0,
+    term_months INT NOT NULL,
+    monthly_payment DECIMAL(15, 2),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    status ENUM('active', 'completed', 'defaulted') DEFAULT 'active',
+    purpose TEXT,
+    guarantor VARCHAR(200),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+);
+
+-- Loan Payments table (লোনের কিস্তি পরিশোধ)
+CREATE TABLE IF NOT EXISTS loan_payments (
+    id VARCHAR(50) PRIMARY KEY,
+    loan_id VARCHAR(50) NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    payment_date DATE NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE
+);
+
+-- Expenses table (সমিতির খরচ)
+CREATE TABLE IF NOT EXISTS expenses (
+    id VARCHAR(50) PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    category VARCHAR(100),
+    amount DECIMAL(15, 2) NOT NULL,
+    date DATE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

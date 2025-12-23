@@ -172,7 +172,10 @@ const STORAGE_KEYS = {
     RETURNS: 'investment_returns',
     DONATIONS: 'donations',
     ACTIVITIES: 'activities',
-    USERS: 'users'
+    USERS: 'users',
+    LOANS: 'loans',
+    LOAN_PAYMENTS: 'loan_payments',
+    EXPENSES: 'expenses'
 };
 
 // Default monthly deposit amount
