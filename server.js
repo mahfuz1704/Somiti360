@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 dotenv.config();
 
@@ -11,6 +12,14 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// Serve static files from the root directory
+app.use(express.static('.'));
+
+// Route for the root URL
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Database connection pool
 const pool = mysql.createPool({
@@ -47,7 +56,7 @@ app.post('/api/:table', asyncHandler(async (req, res) => {
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Invalid table name' });
     }
-    
+
     const data = req.body;
     const [result] = await pool.query(`INSERT INTO ${table} SET ?`, [data]);
     res.json({ id: result.insertId, ...data });
@@ -60,7 +69,7 @@ app.delete('/api/:table/:id', asyncHandler(async (req, res) => {
     if (!allowedTables.includes(table)) {
         return res.status(400).json({ error: 'Invalid table name' });
     }
-    
+
     await pool.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
     res.json({ success: true });
 }));
