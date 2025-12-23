@@ -9,6 +9,7 @@ const Dashboard = {
         await this.updateStats();
         await this.updateRecentActivities();
         await this.updatePendingDeposits();
+        await this.updatePendingLoans();
         this.updateDate();
     },
 
@@ -221,6 +222,46 @@ const Dashboard = {
         } else {
             Utils.showToast('জমা করতে ব্যর্থ হয়েছে', 'error');
         }
+    },
+
+    // Pending loans update
+    updatePendingLoans: async function () {
+        const container = document.getElementById('pendingLoansList');
+        if (!container) return;
+
+        // Get active loans with outstanding balance
+        const activeLoans = await Loans.getActive();
+
+        // Get loans with outstanding balance
+        const pendingLoans = [];
+        for (const loan of activeLoans) {
+            const outstanding = await Loans.getOutstanding(loan.id);
+            if (outstanding > 0) {
+                const member = await Members.getById(loan.member_id);
+                pendingLoans.push({
+                    ...loan,
+                    memberName: member?.name || 'অজানা',
+                    outstanding: outstanding
+                });
+            }
+        }
+
+        if (pendingLoans.length === 0) {
+            container.innerHTML = `<tr class="empty-row"><td colspan="3">কোনো বকেয়া লোন নেই ✅</td></tr>`;
+            return;
+        }
+
+        container.innerHTML = pendingLoans.map(loan => `
+            <tr>
+                <td><strong>${loan.memberName}</strong></td>
+                <td>${Utils.formatCurrency(loan.outstanding)}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="Loans.showPaymentForm('${loan.id}')" style="padding: 4px 12px; font-size: 12px;">
+                        আদায়
+                    </button>
+                </td>
+            </tr>
+        `).join('');
     },
 
     // Current date display
