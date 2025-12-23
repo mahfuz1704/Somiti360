@@ -8,7 +8,7 @@ const Dashboard = {
     refresh: async function () {
         await this.updateStats();
         await this.updateRecentActivities();
-        await this.updatePendingDeposits();
+        await this.updateMonthlyDeposits();
         await this.updatePendingLoans();
         this.updateDate();
     },
@@ -41,48 +41,6 @@ const Dashboard = {
         const now = new Date();
         document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
 
-        // মাসিক হিসাব (Monthly Overview)
-        const { month, year } = Utils.getCurrentMonthYear();
-
-        // Monthly Income
-        const mDeposits = (await Deposits.getByMonthYear(month, year)).reduce((sum, d) => sum + d.amount, 0);
-
-        // Monthly Opening Balance (New Members)
-        const mNewMembers = allMembers.filter(m => {
-            const d = new Date(m.joinDate || m.join_date);
-            return d.getMonth() + 1 === month && d.getFullYear() === year;
-        });
-        const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (m.openingBalance || m.opening_balance || 0), 0);
-
-        const allReturns = await Investments.getAllReturns();
-        const mProfit = allReturns.filter(r => {
-            const d = new Date(r.date);
-            return d.getMonth() + 1 === month && d.getFullYear() === year && r.type === 'profit';
-        }).reduce((sum, r) => sum + r.amount, 0);
-
-        const monthlyIncome = mDeposits + mOpeningBalance + mProfit;
-        document.getElementById('monthlyIncome').textContent = Utils.formatCurrency(monthlyIncome);
-
-        // Monthly Expense
-        const allInvestments = await Investments.getAll();
-        const mInvestments = allInvestments.filter(i => {
-            const d = new Date(i.date);
-            return d.getMonth() + 1 === month && d.getFullYear() === year;
-        }).reduce((sum, i) => sum + i.amount, 0);
-
-        const mLoss = allReturns.filter(r => {
-            const d = new Date(r.date);
-            return d.getMonth() + 1 === month && d.getFullYear() === year && r.type === 'loss';
-        }).reduce((sum, r) => sum + r.amount, 0);
-
-        const allDonations = await Donations.getAll();
-        const mDonations = allDonations.filter(d => {
-            const dt = new Date(d.date);
-            return dt.getMonth() + 1 === month && dt.getFullYear() === year;
-        }).reduce((sum, d) => sum + d.amount, 0);
-
-        const monthlyExpense = mInvestments + mLoss + mDonations;
-        document.getElementById('monthlyExpense').textContent = Utils.formatCurrency(monthlyExpense);
     },
 
     // Recent activities update
