@@ -5,34 +5,35 @@
 
 const Dashboard = {
     // Dashboard refresh
-    refresh: function () {
-        this.updateStats();
-        this.updateRecentActivities();
-        this.updatePendingDeposits();
+    refresh: async function () {
+        await this.updateStats();
+        await this.updateRecentActivities();
+        await this.updatePendingDeposits();
         this.updateDate();
     },
 
     // Stats update
-    updateStats: function () {
+    updateStats: async function () {
         // ওপেনিং ব্যালান্স কাউন্ট
-        const totalOpeningBalance = Members.getAll().reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+        const allMembers = await Members.getAll();
+        const totalOpeningBalance = allMembers.reduce((sum, m) => sum + (m.openingBalance || m.opening_balance || 0), 0);
 
-        // মোট সঞ্চয় (Deposits + Opening Balance)
-        const totalDeposits = Deposits.getTotal() + totalOpeningBalance;
+        // মোট সদ্চয় (Deposits + Opening Balance)
+        const totalDeposits = await Deposits.getTotal() + totalOpeningBalance;
         document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
         // মোট বিনিয়োগ
-        document.getElementById('totalInvestments').textContent = Utils.formatCurrency(Investments.getTotal());
+        document.getElementById('totalInvestments').textContent = Utils.formatCurrency(await Investments.getTotal());
 
         // মোট লাভ
-        const totalProfit = Investments.getTotalProfit() - Investments.getTotalLoss();
+        const totalProfit = await Investments.getTotalProfit() - await Investments.getTotalLoss();
         document.getElementById('totalProfit').textContent = Utils.formatCurrency(totalProfit);
 
         // মোট সহায়তা
-        document.getElementById('totalDonations').textContent = Utils.formatCurrency(Donations.getTotal());
+        document.getElementById('totalDonations').textContent = Utils.formatCurrency(await Donations.getTotal());
 
         // বর্তমান ব্যালেন্স
-        const balance = totalDeposits + totalProfit - Investments.getTotalLoss() - Donations.getTotal();
+        const balance = totalDeposits + totalProfit - await Investments.getTotalLoss() - await Donations.getTotal();
         document.getElementById('currentBalance').textContent = Utils.formatCurrency(balance);
 
         // লাস্ট আপডেট
@@ -43,16 +44,17 @@ const Dashboard = {
         const { month, year } = Utils.getCurrentMonthYear();
 
         // Monthly Income
-        const mDeposits = Deposits.getByMonthYear(month, year).reduce((sum, d) => sum + d.amount, 0);
+        const mDeposits = (await Deposits.getByMonthYear(month, year)).reduce((sum, d) => sum + d.amount, 0);
 
         // Monthly Opening Balance (New Members)
-        const mNewMembers = Members.getAll().filter(m => {
-            const d = new Date(m.joinDate);
+        const mNewMembers = allMembers.filter(m => {
+            const d = new Date(m.joinDate || m.join_date);
             return d.getMonth() + 1 === month && d.getFullYear() === year;
         });
-        const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+        const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (m.openingBalance || m.opening_balance || 0), 0);
 
-        const mProfit = Investments.getAllReturns().filter(r => {
+        const allReturns = await Investments.getAllReturns();
+        const mProfit = allReturns.filter(r => {
             const d = new Date(r.date);
             return d.getMonth() + 1 === month && d.getFullYear() === year && r.type === 'profit';
         }).reduce((sum, r) => sum + r.amount, 0);
@@ -61,17 +63,19 @@ const Dashboard = {
         document.getElementById('monthlyIncome').textContent = Utils.formatCurrency(monthlyIncome);
 
         // Monthly Expense
-        const mInvestments = Investments.getAll().filter(i => {
+        const allInvestments = await Investments.getAll();
+        const mInvestments = allInvestments.filter(i => {
             const d = new Date(i.date);
             return d.getMonth() + 1 === month && d.getFullYear() === year;
         }).reduce((sum, i) => sum + i.amount, 0);
 
-        const mLoss = Investments.getAllReturns().filter(r => {
+        const mLoss = allReturns.filter(r => {
             const d = new Date(r.date);
             return d.getMonth() + 1 === month && d.getFullYear() === year && r.type === 'loss';
         }).reduce((sum, r) => sum + r.amount, 0);
 
-        const mDonations = Donations.getAll().filter(d => {
+        const allDonations = await Donations.getAll();
+        const mDonations = allDonations.filter(d => {
             const dt = new Date(d.date);
             return dt.getMonth() + 1 === month && dt.getFullYear() === year;
         }).reduce((sum, d) => sum + d.amount, 0);
@@ -81,8 +85,8 @@ const Dashboard = {
     },
 
     // Recent activities update
-    updateRecentActivities: function () {
-        const activities = Activities.getRecent(6);
+    updateRecentActivities: async function () {
+        const activities = await Activities.getRecent(6);
         const container = document.getElementById('recentActivities');
 
         if (activities.length === 0) {
@@ -116,8 +120,8 @@ const Dashboard = {
     },
 
     // Pending deposits update
-    updatePendingDeposits: function () {
-        const pending = Deposits.getPending();
+    updatePendingDeposits: async function () {
+        const pending = await Deposits.getPending();
         const container = document.getElementById('pendingDepositsList');
         const { month, year } = Utils.getCurrentMonthYear();
         const monthName = Utils.getMonthName(month - 1);
@@ -154,13 +158,13 @@ const Dashboard = {
  */
 const Activities = {
     // সব activities লোড
-    getAll: function () {
-        return Storage.load(STORAGE_KEYS.ACTIVITIES) || [];
+    getAll: async function () {
+        return await Storage.load(STORAGE_KEYS.ACTIVITIES) || [];
     },
 
     // নতুন activity যোগ
-    add: function (type, message) {
-        const activities = this.getAll();
+    add: async function (type, message) {
+        const activities = await this.getAll();
 
         activities.unshift({
             id: Utils.generateId(),
@@ -174,11 +178,11 @@ const Activities = {
             activities.pop();
         }
 
-        Storage.save(STORAGE_KEYS.ACTIVITIES, activities);
+        await Storage.save(STORAGE_KEYS.ACTIVITIES, activities);
     },
 
     // সাম্প্রতিক activities
-    getRecent: function (count = 10) {
-        return this.getAll().slice(0, count);
+    getRecent: async function (count = 10) {
+        return (await this.getAll()).slice(0, count);
     }
 };

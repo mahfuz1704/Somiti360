@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS members (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
+    designation VARCHAR(100),
+    opening_balance DECIMAL(15, 2) DEFAULT 0,
     address TEXT,
     join_date DATE,
     status ENUM('active', 'inactive') DEFAULT 'active',

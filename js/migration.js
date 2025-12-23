@@ -20,7 +20,7 @@ const Migration = {
                         name: member.name,
                         phone: member.phone || '',
                         designation: member.designation || '',
-                        openingBalance: member.openingBalance || 0,
+                        opening_balance: member.openingBalance || 0,
                         address: member.address || '',
                         join_date: member.joinDate || Utils.getCurrentDate()
                     });

@@ -5,19 +5,19 @@
 
 const Donations = {
     // সব সহায়তা লোড
-    getAll: function () {
-        return Storage.load(STORAGE_KEYS.DONATIONS) || [];
+    getAll: async function () {
+        return await Storage.load(STORAGE_KEYS.DONATIONS) || [];
     },
 
     // ID দিয়ে সহায়তা খোঁজা
-    getById: function (id) {
-        const donations = this.getAll();
+    getById: async function (id) {
+        const donations = await this.getAll();
         return donations.find(d => d.id === id);
     },
 
     // নতুন সহায়তা যোগ
-    add: function (donationData) {
-        const donations = this.getAll();
+    add: async function (donationData) {
+        const donations = await this.getAll();
 
         const newDonation = {
             id: Utils.generateId(),
@@ -31,7 +31,7 @@ const Donations = {
         };
 
         donations.push(newDonation);
-        Storage.save(STORAGE_KEYS.DONATIONS, donations);
+        await Storage.save(STORAGE_KEYS.DONATIONS, donations);
 
         Activities.add('donation_add', `সহায়তা: ${newDonation.recipientName}-কে ${Utils.formatCurrency(newDonation.amount)}`);
 
@@ -39,8 +39,8 @@ const Donations = {
     },
 
     // সহায়তা update
-    update: function (id, donationData) {
-        const donations = this.getAll();
+    update: async function (id, donationData) {
+        const donations = await this.getAll();
         const index = donations.findIndex(d => d.id === id);
 
         if (index === -1) return null;
@@ -55,34 +55,34 @@ const Donations = {
             updatedAt: new Date().toISOString()
         };
 
-        Storage.save(STORAGE_KEYS.DONATIONS, donations);
+        await Storage.save(STORAGE_KEYS.DONATIONS, donations);
         return donations[index];
     },
 
     // সহায়তা delete
-    delete: function (id) {
-        const donations = this.getAll().filter(d => d.id !== id);
-        Storage.save(STORAGE_KEYS.DONATIONS, donations);
+    delete: async function (id) {
+        const donations = (await this.getAll()).filter(d => d.id !== id);
+        await Storage.save(STORAGE_KEYS.DONATIONS, donations);
         return true;
     },
 
     // মোট সহায়তা
-    getTotal: function () {
-        return this.getAll().reduce((sum, d) => sum + d.amount, 0);
+    getTotal: async function () {
+        return (await this.getAll()).reduce((sum, d) => sum + d.amount, 0);
     },
 
     // Purpose অনুযায়ী সহায়তা
-    getByPurpose: function (purpose) {
-        return this.getAll().filter(d => d.purpose === purpose);
+    getByPurpose: async function (purpose) {
+        return (await this.getAll()).filter(d => d.purpose === purpose);
     },
 
     // Purposes
     purposes: ['চিকিৎসা সহায়তা', 'শিক্ষা সহায়তা', 'দুর্যোগ সহায়তা', 'গৃহ নির্মাণ', 'বিবাহ সহায়তা', 'সাধারণ সহায়তা', 'অন্যান্য'],
 
     // Table render
-    renderTable: function (donations = null) {
+    renderTable: async function (donations = null) {
         const tbody = document.getElementById('donationsList');
-        const data = donations || this.getAll().sort((a, b) => new Date(b.date) - new Date(a.date));
+        const data = donations || (await this.getAll()).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (data.length === 0) {
             tbody.innerHTML = '<tr class="empty-row"><td colspan="6">কোনো সহায়তা নেই</td></tr>';
@@ -155,8 +155,8 @@ const Donations = {
     },
 
     // Edit form
-    edit: function (id) {
-        const donation = this.getById(id);
+    edit: async function (id) {
+        const donation = await this.getById(id);
         if (!donation) return;
 
         const purposeOptions = this.purposes.map(p =>
@@ -200,7 +200,7 @@ const Donations = {
     },
 
     // Form submit handler
-    handleSubmit: function (event) {
+    handleSubmit: async function (event) {
         event.preventDefault();
 
         const donationData = {
@@ -217,15 +217,15 @@ const Donations = {
             return;
         }
 
-        this.add(donationData);
+        await this.add(donationData);
         Utils.closeModal();
-        this.renderTable();
-        Dashboard.refresh();
+        await this.renderTable();
+        await Dashboard.refresh();
         Utils.showToast('সহায়তা সফলভাবে যোগ হয়েছে', 'success');
     },
 
     // Update handler
-    handleUpdate: function (event, id) {
+    handleUpdate: async function (event, id) {
         event.preventDefault();
 
         const donationData = {
@@ -236,22 +236,22 @@ const Donations = {
             description: document.getElementById('donationDescription').value.trim()
         };
 
-        this.update(id, donationData);
+        await this.update(id, donationData);
         Utils.closeModal();
-        this.renderTable();
-        Dashboard.refresh();
+        await this.renderTable();
+        await Dashboard.refresh();
         Utils.showToast('সহায়তা আপডেট হয়েছে', 'success');
     },
 
     // Delete confirmation
-    confirmDelete: function (id) {
-        const donation = this.getById(id);
+    confirmDelete: async function (id) {
+        const donation = await this.getById(id);
         if (!donation) return;
 
         if (Utils.confirm(`আপনি কি "${donation.recipientName}"-এর সহায়তা মুছে ফেলতে চান?`)) {
-            this.delete(id);
-            this.renderTable();
-            Dashboard.refresh();
+            await this.delete(id);
+            await this.renderTable();
+            await Dashboard.refresh();
             Utils.showToast('সহায়তা মুছে ফেলা হয়েছে', 'success');
         }
     }
