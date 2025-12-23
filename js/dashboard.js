@@ -124,23 +124,102 @@ const Dashboard = {
         const pending = await Deposits.getPending();
         const container = document.getElementById('pendingDepositsList');
         const { month, year } = Utils.getCurrentMonthYear();
-        const monthName = Utils.getMonthName(month - 1);
+
+        if (!container) return;
 
         if (pending.length === 0) {
-            container.innerHTML = `<li class="empty-state">${monthName} মাসে সব জমা সম্পন্ন</li>`;
+            container.innerHTML = `<tr class="empty-row"><td colspan="3">কোনো বকেয়া নেই ✅</td></tr>`;
             return;
         }
 
-        container.innerHTML = pending.slice(0, 5).map(member => `
-            <li>
-                <span>⚠️</span>
-                <span>${member.name}</span>
-                <small style="color: #999; margin-left: auto;">${monthName} বকেয়া</small>
-            </li>
+        container.innerHTML = pending.map(member => `
+            <tr>
+                <td><strong>${member.name}</strong></td>
+                <td>${Utils.formatCurrency(DEFAULT_DEPOSIT_AMOUNT)}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="Dashboard.collectDeposit('${member.id}', '${member.name}')" style="padding: 4px 12px; font-size: 12px;">
+                        আদায়
+                    </button>
+                </td>
+            </tr>
         `).join('');
+    },
 
-        if (pending.length > 5) {
-            container.innerHTML += `<li style="color: #666; text-align: center;">আরো ${Utils.formatNumber(pending.length - 5)} জন...</li>`;
+    // জমা আদায় - সরাসরি জমার ফর্ম ওপেন করা
+    collectDeposit: async function (memberId, memberName) {
+        const { month, year } = Utils.getCurrentMonthYear();
+
+        const formHtml = `
+            <form id="quickDepositForm" onsubmit="Dashboard.handleQuickDeposit(event)">
+                <input type="hidden" id="quickDepositMember" value="${memberId}">
+                <div class="form-group">
+                    <label>সদস্য</label>
+                    <input type="text" value="${memberName}" disabled style="background: #f5f5f5;">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quickDepositMonth">মাস</label>
+                        <select id="quickDepositMonth">
+                            ${Array.from({ length: 12 }, (_, i) =>
+            `<option value="${i + 1}" ${i + 1 === month ? 'selected' : ''}>${Utils.getMonthName(i)}</option>`
+        ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quickDepositYear">বছর</label>
+                        <input type="number" id="quickDepositYear" value="${year}" min="2020" max="2099">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quickDepositAmount">পরিমাণ (টাকা)</label>
+                    <input type="number" id="quickDepositAmount" value="${DEFAULT_DEPOSIT_AMOUNT}" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="quickDepositDate">জমার তারিখ</label>
+                    <input type="date" id="quickDepositDate" value="${Utils.getCurrentDate()}">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">বাতিল</button>
+                    <button type="submit" class="btn btn-primary">জমা করুন</button>
+                </div>
+            </form>
+        `;
+
+        Utils.openModal('জমা আদায়', formHtml);
+    },
+
+    // দ্রুত জমা হ্যান্ডেল
+    handleQuickDeposit: async function (event) {
+        event.preventDefault();
+
+        const depositData = {
+            memberId: document.getElementById('quickDepositMember').value,
+            month: document.getElementById('quickDepositMonth').value,
+            year: document.getElementById('quickDepositYear').value,
+            amount: document.getElementById('quickDepositAmount').value,
+            date: document.getElementById('quickDepositDate').value
+        };
+
+        // Check duplicate
+        const deposits = await Deposits.getAll();
+        const existing = deposits.find(d =>
+            d.member_id === depositData.memberId &&
+            d.month === parseInt(depositData.month) &&
+            d.year === parseInt(depositData.year)
+        );
+
+        if (existing) {
+            Utils.showToast('এই মাসে এই সদস্যের জমা ইতিমধ্যে আছে', 'warning');
+            return;
+        }
+
+        const success = await Deposits.add(depositData);
+        if (success) {
+            Utils.closeModal();
+            await this.refresh();
+            Utils.showToast('জমা সফলভাবে সম্পন্ন হয়েছে', 'success');
+        } else {
+            Utils.showToast('জমা করতে ব্যর্থ হয়েছে', 'error');
         }
     },
 

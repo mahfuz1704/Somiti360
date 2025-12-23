@@ -189,29 +189,24 @@
                             </div>
                         </div>
 
-                        <!-- Quick Actions -->
+                        <!-- চলতি মাসের বকেয়া -->
                         <div class="card">
-                            <h3>দ্রুত অ্যাকশন</h3>
-                            <div class="quick-actions">
-                                <button class="action-tile"
-                                    onclick="App.loadPage('deposits'); document.getElementById('addDepositBtn').click()">
-                                    <span class="tile-icon">💰</span>
-                                    <span class="tile-text">নতুন জমা</span>
-                                </button>
-                                <button class="action-tile"
-                                    onclick="App.loadPage('members'); document.getElementById('addMemberBtn').click()">
-                                    <span class="tile-icon">👤</span>
-                                    <span class="tile-text">নতুন সদস্য</span>
-                                </button>
-                                <button class="action-tile"
-                                    onclick="App.loadPage('investments'); document.getElementById('addInvestmentBtn').click()">
-                                    <span class="tile-icon">📈</span>
-                                    <span class="tile-text">নতুন বিনিয়োগ</span>
-                                </button>
-                                <button class="action-tile" onclick="App.loadPage('reports')">
-                                    <span class="tile-icon">📊</span>
-                                    <span class="tile-text">রিপোর্ট</span>
-                                </button>
+                            <h3>চলতি মাসের বকেয়া</h3>
+                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                <table class="data-table" id="pendingDepositsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>সদস্য</th>
+                                            <th>পরিমাণ</th>
+                                            <th>অ্যাকশন</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pendingDepositsList">
+                                        <tr class="empty-row">
+                                            <td colspan="3">কোনো বকেয়া নেই</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
