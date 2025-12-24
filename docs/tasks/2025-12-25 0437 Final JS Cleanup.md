@@ -1,0 +1,3 @@
+- [x] `js/sample-data.js` এবং `js/migration.js` ফাইলগুলো মুছে ফেলা।
+- [/] `index.html` থেকে এই ফাইলগুলোর লিঙ্ক সরিয়ে ফেলা।
+- [ ] পরিবর্তনগুলো commit এবং push করা।
