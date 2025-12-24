@@ -101,7 +101,7 @@ const Dashboard = {
         }
 
         container.innerHTML = recentExpenses.map(expense => `
-            <li>
+            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
                 <div style="display: flex; flex-direction: column;">
                     <span><strong>${expense.title}</strong></span>
                     <small style="color: #666; font-size: 11px;">${expense.category}</small>
@@ -159,8 +159,8 @@ const Dashboard = {
                     </td>
                     <td>
                         ${isPaid
-                    ? `<span class="badge badge-success">পরিশোধিত ✅</span>`
-                    : `<button class="btn btn-primary btn-sm" onclick="Dashboard.collectDeposit('${member.id}', '${member.name}')" style="padding: 4px 12px; font-size: 12px;">আদায়</button>`
+                    ? `<span class="badge badge-success">পরিশোধিত</span>`
+                    : `<span class="badge badge-danger">বকেয়া</span>`
                 }
                     </td>
                 </tr>
@@ -269,7 +269,7 @@ const Dashboard = {
         }
 
         if (pendingLoans.length === 0) {
-            container.innerHTML = `<tr class="empty-row"><td colspan="3">কোনো বকেয়া লোন নেই ✅</td></tr>`;
+            container.innerHTML = `<tr class="empty-row"><td colspan="2">কোনো বকেয়া লোন নেই ✅</td></tr>`;
             return;
         }
 
@@ -277,11 +277,7 @@ const Dashboard = {
             <tr>
                 <td><strong>${loan.memberName}</strong></td>
                 <td>${Utils.formatCurrency(loan.outstanding)}</td>
-                <td class="text-center">
-                    <button class="btn btn-primary btn-sm" onclick="Loans.showPaymentForm('${loan.id}')" style="padding: 4px 12px; font-size: 12px;">
-                        আদায়
-                    </button>
-                </td>
+
             </tr>
         `).join('');
     },

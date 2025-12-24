@@ -351,11 +351,15 @@ body {
 
 /* Activity List */
 .recent-activities ul,
+.recent-expenses ul,
 .pending-deposits ul {
     list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .recent-activities li,
+.recent-expenses li,
 .pending-deposits li {
     padding: 12px 0;
     border-bottom: 1px solid var(--gray-100);

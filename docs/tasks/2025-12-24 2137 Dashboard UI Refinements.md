@@ -1,0 +1,6 @@
+- [x] Dashboard UI Refinements
+  - [x] Rename "Current Total Investments" to "Running Total Investments"
+  - [x] Update Monthly Statement status (Red Due, Green Paid, Remove Button)
+  - [x] Remove Action column from Pending Loans
+  - [x] Fix Recent Expenses Alignment (Flexbox)
+  - [x] Fix Recent Expenses Spacing (Reduce gaps)

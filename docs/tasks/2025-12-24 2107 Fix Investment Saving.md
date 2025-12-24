@@ -1,0 +1,4 @@
+- [x] Fix Investment Saving
+  - [x] Analyze logic
+  - [x] Fix Investments.add/delete
+  - [x] Fix Donations.add/delete

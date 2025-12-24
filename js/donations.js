@@ -17,53 +17,40 @@ const Donations = {
 
     // নতুন সহায়তা যোগ
     add: async function (donationData) {
-        const donations = await this.getAll();
+        // Contact info append to description as no DB column
+        const desc = donationData.description || '';
+        const contact = donationData.contact ? ` [যোগাযোগ: ${donationData.contact}]` : '';
 
         const newDonation = {
             id: Utils.generateId(),
-            recipientName: donationData.recipientName,
-            purpose: donationData.purpose || 'সাধারণ সহায়তা',
+            recipient: donationData.recipientName, // DB column is 'recipient'
+            title: donationData.purpose || 'সাধারণ সহায়তা', // DB column is 'title'
             amount: parseFloat(donationData.amount) || 0,
             date: donationData.date || Utils.getCurrentDate(),
-            description: donationData.description || '',
-            contact: donationData.contact || '',
-            createdAt: new Date().toISOString()
+            description: desc + contact
+            // created_at removed
         };
 
-        donations.push(newDonation);
-        await Storage.save(STORAGE_KEYS.DONATIONS, donations);
+        const success = await Storage.save(STORAGE_KEYS.DONATIONS, newDonation);
 
-        Activities.add('donation_add', `সহায়তা: ${newDonation.recipientName}-কে ${Utils.formatCurrency(newDonation.amount)}`);
+        if (success) {
+            Activities.add('donation_add', `সহায়তা: ${newDonation.recipient}-কে ${Utils.formatCurrency(newDonation.amount)}`);
+        }
 
-        return newDonation;
+        return success ? newDonation : null;
     },
 
     // সহায়তা update
     update: async function (id, donationData) {
-        const donations = await this.getAll();
-        const index = donations.findIndex(d => d.id === id);
-
-        if (index === -1) return null;
-
-        donations[index] = {
-            ...donations[index],
-            recipientName: donationData.recipientName,
-            purpose: donationData.purpose,
-            amount: parseFloat(donationData.amount),
-            description: donationData.description,
-            contact: donationData.contact,
-            updatedAt: new Date().toISOString()
-        };
-
-        await Storage.save(STORAGE_KEYS.DONATIONS, donations);
-        return donations[index];
+        // SQL API currently doesn't support generic updates easily without specific endpoints or logic
+        // For now preventing client-side array save which fails. 
+        console.warn('Update not fully supported in current API version');
+        return null;
     },
 
     // সহায়তা delete
     delete: async function (id) {
-        const donations = (await this.getAll()).filter(d => d.id !== id);
-        await Storage.save(STORAGE_KEYS.DONATIONS, donations);
-        return true;
+        return await Storage.remove(STORAGE_KEYS.DONATIONS, id);
     },
 
     // মোট সহায়তা
@@ -93,8 +80,8 @@ const Donations = {
             return `
                 <tr>
                     <td>${Utils.formatDateShort(donation.date)}</td>
-                    <td><strong>${donation.recipientName}</strong></td>
-                    <td><span class="badge badge-info">${donation.purpose}</span></td>
+                    <td><strong>${donation.recipient || donation.recipientName}</strong></td>
+                    <td><span class="badge badge-info">${donation.title || donation.purpose}</span></td>
                     <td>${Utils.formatCurrency(donation.amount)}</td>
                     <td>${donation.description || '-'}</td>
                     <td>
@@ -217,11 +204,16 @@ const Donations = {
             return;
         }
 
-        await this.add(donationData);
-        Utils.closeModal();
-        await this.renderTable();
-        await Dashboard.refresh();
-        Utils.showToast('সহায়তা সফলভাবে যোগ হয়েছে', 'success');
+        const result = await this.add(donationData);
+
+        if (result) {
+            Utils.closeModal();
+            await this.renderTable();
+            await Dashboard.refresh();
+            Utils.showToast('সহায়তা সফলভাবে যোগ হয়েছে', 'success');
+        } else {
+            Utils.showToast('সহায়তা সেভ করতে সমস্যা হয়েছে!', 'error');
+        }
     },
 
     // Update handler

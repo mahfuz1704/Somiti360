@@ -15,6 +15,10 @@ const Storage = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            if (!response.ok) {
+                console.error('Storage save failed:', response.status, response.statusText, await response.text());
+                return false;
+            }
             return response.ok;
         } catch (e) {
             console.error('Storage save error:', e);
