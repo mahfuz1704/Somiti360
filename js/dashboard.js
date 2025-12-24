@@ -110,6 +110,9 @@ const Dashboard = {
         if (!container) return;
 
         const { month, year } = Utils.getCurrentMonthYear();
+        const monthName = Utils.getMonthName(month - 1);
+        const titleEl = document.getElementById('monthlyDepositsTitle');
+        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName})`;
 
         // সব সদস্য এবং চলতি মাসের জমা লোড
         const [members, deposits] = await Promise.all([
