@@ -1,0 +1,5 @@
+- [x] Localhost-এ রান করার জন্য Task List তৈরি করা।
+- [x] Database Connection এবং Environment Variables চেক করা।
+- [x] Database ইননিশিয়ালাইজ করা (`node setup-db.js`)।
+- [x] Node server শুরু করা (`node server.js`)।
+- [x] Browser-এ http://localhost:3000 ওপেন করে ভেরিফাই করা।
