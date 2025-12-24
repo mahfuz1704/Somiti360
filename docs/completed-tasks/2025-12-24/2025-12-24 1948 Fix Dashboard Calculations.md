@@ -1,0 +1,9 @@
+- [x] Update dashboard.js logic (Calculate Active Investments, Outstanding Loans)
+  - [x] Verify UI changes
+- [x] UI Refinement
+  - [x] Center align Status/Action columns on Dashboard
+  - [x] Left align Status/Action columns on other pages
+- [x] Fix Current Balance calculation
+- [x] Fix Total Savings calculation
+- [x] Verify other dashboard stats (Investment, Profit, etc.)
+- [x] Test with real/dummy data

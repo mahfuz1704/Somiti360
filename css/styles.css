@@ -547,6 +547,7 @@ body {
 .action-buttons {
     display: flex;
     gap: 8px;
+    justify-content: center;
 }
 
 .action-btn {
@@ -1489,4 +1490,39 @@ body {
     content: "🚪";
     font-size: 1.5rem;
     cursor: pointer;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    /* Default left */
+}
+
+#page-dashboard .action-buttons {
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+    background: var(--gray-100);
+}
+
+/* ... existing code ... */
+
+/* Utilities */
+.text-center {
+    text-align: center !important;
+}
+
+/* Center align status column cells and action cells ONLY for Dashboard */
+#page-dashboard .data-table td:has(.badge),
+#page-dashboard .data-table td:has(.action-buttons),
+#page-dashboard .data-table td:has(.btn) {
+    text-align: center;
 }

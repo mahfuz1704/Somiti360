@@ -58,7 +58,7 @@ const Deposits = {
     // মোট জমা
     getTotal: async function () {
         const deposits = await this.getAll();
-        return deposits.reduce((sum, d) => sum + d.amount, 0);
+        return deposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
     },
 
     // মাসিক মোট জমা

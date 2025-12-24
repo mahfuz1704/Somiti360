@@ -149,7 +149,7 @@ const Loans = {
     // মোট পরিশোধ
     getTotalPaid: async function (loanId) {
         const payments = await this.getPaymentsByLoan(loanId);
-        return payments.reduce((sum, p) => sum + p.amount, 0);
+        return payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
     },
 
     // বকেয়া হিসাব
@@ -157,7 +157,9 @@ const Loans = {
         const loan = await this.getById(loanId);
         if (!loan) return 0;
 
-        const totalDue = loan.amount + (loan.amount * loan.interest_rate / 100);
+        const amount = parseFloat(loan.amount) || 0;
+        const interestRate = parseFloat(loan.interest_rate) || 0;
+        const totalDue = amount + (amount * interestRate / 100);
         const totalPaid = await this.getTotalPaid(loanId);
         return Math.max(0, totalDue - totalPaid);
     },
@@ -165,13 +167,13 @@ const Loans = {
     // মোট লোন বিতরণ
     getTotalDisbursed: async function () {
         const loans = await this.getAll();
-        return loans.reduce((sum, l) => sum + l.amount, 0);
+        return loans.reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
     },
 
     // মোট লোন আদায়
     getTotalCollected: async function () {
         const payments = await this.getAllPayments();
-        return payments.reduce((sum, p) => sum + p.amount, 0);
+        return payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
     },
 
     // মোট বকেয়া

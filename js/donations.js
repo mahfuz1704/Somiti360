@@ -68,7 +68,7 @@ const Donations = {
 
     // মোট সহায়তা
     getTotal: async function () {
-        return (await this.getAll()).reduce((sum, d) => sum + d.amount, 0);
+        return (await this.getAll()).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
     },
 
     // Purpose অনুযায়ী সহায়তা

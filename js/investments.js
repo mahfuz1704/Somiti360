@@ -121,21 +121,28 @@ const Investments = {
 
     // মোট বিনিয়োগ
     getTotal: async function () {
-        return (await this.getAll()).reduce((sum, i) => sum + i.amount, 0);
+        return (await this.getAll()).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+    },
+
+    // বর্তমান (Active) মোট বিনিয়োগ
+    getActiveTotal: async function () {
+        return (await this.getAll())
+            .filter(i => i.status === 'active')
+            .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
     },
 
     // মোট লাভ
     getTotalProfit: async function () {
         return (await this.getAllReturns())
             .filter(r => r.type === 'profit')
-            .reduce((sum, r) => sum + r.amount, 0);
+            .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
     },
 
     // মোট ক্ষতি
     getTotalLoss: async function () {
         return (await this.getAllReturns())
             .filter(r => r.type === 'loss')
-            .reduce((sum, r) => sum + r.amount, 0);
+            .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
     },
 
     // Summary update

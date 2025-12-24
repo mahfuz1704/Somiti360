@@ -81,7 +81,7 @@ const Expenses = {
     // মোট খরচ
     getTotal: async function () {
         const expenses = await this.getAll();
-        return expenses.reduce((sum, e) => sum + e.amount, 0);
+        return expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
     },
 
     // মাসিক খরচ

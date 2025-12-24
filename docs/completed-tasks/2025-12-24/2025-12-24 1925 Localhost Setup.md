@@ -1,0 +1,3 @@
+- [x] Install dependencies (if needed)
+- [x] Start backend server
+- [x] Verify localhost access

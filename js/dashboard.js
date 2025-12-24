@@ -18,24 +18,45 @@ const Dashboard = {
     updateStats: async function () {
         // ওপেনিং ব্যালান্স কাউন্ট
         const allMembers = await Members.getAll();
-        const totalOpeningBalance = allMembers.reduce((sum, m) => sum + (m.openingBalance || m.opening_balance || 0), 0);
+        const totalOpeningBalance = allMembers.reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
 
         // মোট সদ্চয় (Deposits + Opening Balance)
-        const totalDeposits = await Deposits.getTotal() + totalOpeningBalance;
+        const totalDepositAmount = await Deposits.getTotal();
+        const totalDeposits = totalDepositAmount + totalOpeningBalance;
         document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
-        // মোট বিনিয়োগ
-        document.getElementById('totalInvestments').textContent = Utils.formatCurrency(await Investments.getTotal());
+        // মোট বিনিয়োগ (Active Principal)
+        const totalInvestments = await Investments.getTotal(); // For calculation
+        const activeInvestments = await Investments.getActiveTotal(); // For display
+        const elInvestments = document.getElementById('currentTotalInvestments');
+        if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
 
-        // মোট লাভ
-        const totalProfit = await Investments.getTotalProfit() - await Investments.getTotalLoss();
-        document.getElementById('totalProfit').textContent = Utils.formatCurrency(totalProfit);
+        // মোট বকেয়া লোন (Total Outstanding)
+        const totalOutstanding = await Loans.getTotalOutstanding();
+        const elOutstanding = document.getElementById('totalOutstandingLoan');
+        if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
 
-        // মোট সহায়তা
-        document.getElementById('totalDonations').textContent = Utils.formatCurrency(await Donations.getTotal());
+        // মোট সহায়তা (Donations) - Calculation only
+        const totalDonations = await Donations.getTotal();
 
-        // বর্তমান ব্যালেন্স
-        const balance = totalDeposits + totalProfit - await Investments.getTotalLoss() - await Donations.getTotal();
+        // মোট খরচ (Expenses)
+        const totalExpenses = await Expenses.getTotal();
+        // লোন (Loans)
+        const totalLoansDisbursed = await Loans.getTotalDisbursed();
+        const totalLoanCollections = await Loans.getTotalCollected();
+
+        // Investment Returns (Profit only for Cash In)
+        const investmentCashIn = await Investments.getTotalProfit();
+
+        // বর্তমান ব্যালেন্স (Cash In Hand Calculation)
+        // In: Opening + Deposits + Loan Collections + Investment Returns (Profit)
+        // Out: Expenses + Donations + Loans Disbursed + Investments (Principal)
+
+        const totalCashIn = totalDeposits + totalLoanCollections + investmentCashIn;
+        const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + totalInvestments;
+
+        const balance = totalCashIn - totalCashOut;
+
         document.getElementById('currentBalance').textContent = Utils.formatCurrency(balance);
 
         // লাস্ট আপডেট
@@ -256,7 +277,7 @@ const Dashboard = {
             <tr>
                 <td><strong>${loan.memberName}</strong></td>
                 <td>${Utils.formatCurrency(loan.outstanding)}</td>
-                <td>
+                <td class="text-center">
                     <button class="btn btn-primary btn-sm" onclick="Loans.showPaymentForm('${loan.id}')" style="padding: 4px 12px; font-size: 12px;">
                         আদায়
                     </button>
