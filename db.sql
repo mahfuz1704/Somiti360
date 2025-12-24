@@ -1,7 +1,3 @@
--- স্বপ্ন (Shopno) - Database Schema
-CREATE DATABASE IF NOT EXISTS somiti360;
-USE somiti360;
-
 -- Members table
 CREATE TABLE IF NOT EXISTS members (
     id VARCHAR(50) PRIMARY KEY,
