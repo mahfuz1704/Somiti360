@@ -1,0 +1,3 @@
+- [x] `main` branch-এ `dev` branch থেকে পরিবর্তনগুলো merge করা।
+- [x] `main` branch-এর পরিবর্তনগুলো github-এ push করা।
+- [x] পুনরায় `dev` branch-এ ফিরে আসা।
