@@ -40,6 +40,11 @@ const Dashboard = {
 
         // মোট খরচ (Expenses)
         const totalExpenses = await Expenses.getTotal();
+        // সর্বমোট ব্যয় (Donations + Expenses)
+        const totalExpenditure = totalDonations + totalExpenses;
+        const elExpenditure = document.getElementById('totalExpenditure');
+        if (elExpenditure) elExpenditure.textContent = Utils.formatCurrency(totalExpenditure);
+
         // লোন (Loans)
         const totalLoansDisbursed = await Loans.getTotalDisbursed();
         const totalLoanCollections = await Loans.getTotalCollected();
