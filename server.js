@@ -27,6 +27,9 @@ const pool = mysql.createPool({
     ssl: process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : null
 });
 
+// অনুমোদনযোগ্য টেবিল তালিকা
+const ALLOWED_TABLES = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -35,13 +38,15 @@ app.get('/', (req, res) => {
 app.get('/api/:table', async (req, res) => {
     try {
         const { table } = req.params;
-        const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
-        if (!allowedTables.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+        if (!ALLOWED_TABLES.includes(table)) {
+            return res.status(400).json({ error: 'Invalid table name' });
+        }
 
         const [rows] = await pool.query(`SELECT * FROM ${table} ORDER BY created_at DESC`);
         res.json(rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(`Error fetching from ${req.params.table}:`, err.message);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -49,11 +54,16 @@ app.get('/api/:table', async (req, res) => {
 app.post('/api/:table', async (req, res) => {
     try {
         const { table } = req.params;
+        if (!ALLOWED_TABLES.includes(table)) {
+            return res.status(400).json({ error: 'Invalid table name' });
+        }
+
         const data = req.body;
         const [result] = await pool.query(`INSERT INTO ${table} SET ?`, data);
         res.json({ id: result.insertId, ...data });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(`Error inserting into ${req.params.table}:`, err.message);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -61,10 +71,18 @@ app.post('/api/:table', async (req, res) => {
 app.delete('/api/:table/:id', async (req, res) => {
     try {
         const { table, id } = req.params;
-        await pool.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
+        if (!ALLOWED_TABLES.includes(table)) {
+            return res.status(400).json({ error: 'Invalid table name' });
+        }
+
+        const [result] = await pool.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Record not found' });
+        }
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(`Error deleting from ${req.params.table}:`, err.message);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
