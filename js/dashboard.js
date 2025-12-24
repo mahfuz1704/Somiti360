@@ -8,7 +8,6 @@ const Dashboard = {
     refresh: async function () {
         await this.updateStats();
         await this.updateRecentActivities();
-        await this.updateRecentExpenses();
         await this.updateMonthlyDeposits();
         await this.updatePendingLoans();
         this.updateDate();
@@ -87,32 +86,7 @@ const Dashboard = {
         }).join('');
     },
 
-    // Recent expenses update
-    updateRecentExpenses: async function () {
-        const expenses = await Expenses.getAll();
-        const recentExpenses = expenses.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-        const container = document.getElementById('recentExpenses');
 
-        if (!container) return;
-
-        if (recentExpenses.length === 0) {
-            container.innerHTML = '<li class="empty-state">কোনো খরচ নেই</li>';
-            return;
-        }
-
-        container.innerHTML = recentExpenses.map(expense => `
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee;">
-                <div style="display: flex; flex-direction: column;">
-                    <span><strong>${expense.title}</strong></span>
-                    <small style="color: #666; font-size: 11px;">${expense.category}</small>
-                </div>
-                <div style="margin-left: auto; text-align: right;">
-                    <span style="display: block; font-weight: bold; color: #dc3545;">-${Utils.formatCurrency(expense.amount)}</span>
-                    <small style="color: #999; font-size: 11px;">${Utils.formatDateShort(expense.date)}</small>
-                </div>
-            </li>
-        `).join('');
-    },
 
     // Activity icon
     getActivityIcon: function (type) {
@@ -122,7 +96,10 @@ const Dashboard = {
             'deposit_add': '💰',
             'investment_add': '📈',
             'return_add': '💹',
-            'donation_add': '🤝'
+            'donation_add': '🤝',
+            'expense_add': '💸',
+            'loan_add': '🏦',
+            'loan_payment': '💳'
         };
         return icons[type] || '📌';
     },
@@ -297,30 +274,33 @@ const Dashboard = {
 const Activities = {
     // সব activities লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.ACTIVITIES) || [];
+        const data = await Storage.load(STORAGE_KEYS.ACTIVITIES) || [];
+        // Map DB columns to our frontend object format
+        return data.map(item => ({
+            id: item.id,
+            type: item.type,
+            message: item.action,
+            date: item.timestamp || item.created_at // Handle either column name
+        })).filter(a => a.message).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
 
     // নতুন activity যোগ
     add: async function (type, message) {
-        const activities = await this.getAll();
-
-        activities.unshift({
+        const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
+        const activity = {
             id: Utils.generateId(),
             type: type,
-            message: message,
-            date: new Date().toISOString()
-        });
+            action: message,
+            user_id: user ? user.id : null
+            // timestamp omitted to let DB use CURRENT_TIMESTAMP
+        };
 
-        // শুধু শেষ ১০০টি রাখা
-        if (activities.length > 100) {
-            activities.pop();
-        }
-
-        await Storage.save(STORAGE_KEYS.ACTIVITIES, activities);
+        return await Storage.save(STORAGE_KEYS.ACTIVITIES, activity);
     },
 
     // সাম্প্রতিক activities
     getRecent: async function (count = 10) {
-        return (await this.getAll()).slice(0, count);
+        const all = await this.getAll();
+        return all.slice(0, count);
     }
 };
