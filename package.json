@@ -1,25 +1,12 @@
 {
   "name": "somiti360",
   "version": "1.0.0",
-  "description": "একটি সম্পূর্ণ সমিতি পরিচালনার সফটওয়্যার যা HTML, CSS এবং JavaScript ব্যবহার করে তৈরি।",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "description": "Somiti Management System",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mahfuz1704/Somiti360.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/mahfuz1704/Somiti360/issues"
-  },
-  "homepage": "https://github.com/mahfuz1704/Somiti360#readme",
   "dependencies": {
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",

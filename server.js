@@ -12,16 +12,9 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
-// Serve static files from the root directory
 app.use(express.static('.'));
 
-// Route for the root URL
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Database connection pool
+// ডাটাবেস কানেকশন
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -29,57 +22,52 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    // Aiven এর জন্য SSL প্রয়োজন হতে পারে
+    ssl: process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : null
 });
 
-// Helper to handle async routes
-const asyncHandler = (fn) => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-// Generic GET for any table
-app.get('/api/:table', asyncHandler(async (req, res) => {
-    const { table } = req.params;
-    // Basic protection against SQL injection (for demonstration)
-    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
-    if (!allowedTables.includes(table)) {
-        return res.status(400).json({ error: 'Invalid table name' });
+// ডাটা আনার রুট
+app.get('/api/:table', async (req, res) => {
+    try {
+        const { table } = req.params;
+        const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
+        if (!allowedTables.includes(table)) return res.status(400).json({ error: 'Invalid table' });
+
+        const [rows] = await pool.query(`SELECT * FROM ${table} ORDER BY created_at DESC`);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    const [rows] = await pool.query(`SELECT * FROM ${table}`);
-    res.json(rows);
-}));
+});
 
-// Generic POST for any table
-app.post('/api/:table', asyncHandler(async (req, res) => {
-    const { table } = req.params;
-    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
-    if (!allowedTables.includes(table)) {
-        return res.status(400).json({ error: 'Invalid table name' });
+// ডাটা সেভ করার রুট
+app.post('/api/:table', async (req, res) => {
+    try {
+        const { table } = req.params;
+        const data = req.body;
+        const [result] = await pool.query(`INSERT INTO ${table} SET ?`, data);
+        res.json({ id: result.insertId, ...data });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
+});
 
-    const data = req.body;
-    const [result] = await pool.query(`INSERT INTO ${table} SET ?`, [data]);
-    res.json({ id: result.insertId, ...data });
-}));
-
-// Generic DELETE for any table
-app.delete('/api/:table/:id', asyncHandler(async (req, res) => {
-    const { table, id } = req.params;
-    const allowedTables = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
-    if (!allowedTables.includes(table)) {
-        return res.status(400).json({ error: 'Invalid table name' });
+// ডাটা ডিলিট করার রুট
+app.delete('/api/:table/:id', async (req, res) => {
+    try {
+        const { table, id } = req.params;
+        await pool.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    await pool.query(`DELETE FROM ${table} WHERE id = ?`, [id]);
-    res.json({ success: true });
-}));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
