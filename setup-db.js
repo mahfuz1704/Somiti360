@@ -20,7 +20,7 @@ async function setup() {
 
         // Drop foreign key checks to allow dropping tables
         await connection.query('SET FOREIGN_KEY_CHECKS = 0');
-        const tables = ['activities', 'investment_returns', 'deposits', 'donations', 'investments', 'users', 'members'];
+        const tables = ['activities', 'loan_payments', 'loans', 'expenses', 'investment_returns', 'deposits', 'donations', 'investments', 'users', 'members'];
         for (const table of tables) {
             await connection.query(`DROP TABLE IF EXISTS ${dbName}.${table}`);
         }
