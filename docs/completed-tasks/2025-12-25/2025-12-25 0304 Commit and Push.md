@@ -1,0 +1,2 @@
+- [x] কমপ্লিটেড টাস্ক ফাইলটি (completed task file) git-এ commit করা।
+- [x] সকল পরিবর্তন remote repository-তে push করা।
