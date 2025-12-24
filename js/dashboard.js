@@ -30,7 +30,7 @@ const Dashboard = {
         const elInvestments = document.getElementById('currentTotalInvestments');
         if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
 
-        // মোট বকেয়া লোন (Total Outstanding)
+        // সর্বমোট বকেয়া ঋণ (Total Outstanding)
         const totalOutstanding = await Loans.getTotalOutstanding();
         const elOutstanding = document.getElementById('totalOutstandingLoan');
         if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
