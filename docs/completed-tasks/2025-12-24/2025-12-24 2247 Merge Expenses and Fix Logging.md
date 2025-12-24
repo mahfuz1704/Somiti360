@@ -1,0 +1,7 @@
+- [x] Merge Expenses and Fix Logging
+  - [x] Delete "Recent Expenses" section from Dashboard
+  - [x] Show expense data in "Recent Activities"
+  - [x] Add 'expense_add' icon (💸) to Activities
+  - [x] Fix activities logging to work with SQL Database
+  - [x] Align User ID between Frontend and SQL for proper logging
+  - [x] Commit and Push changes to `dev` and merge to `main`
