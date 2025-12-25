@@ -44,32 +44,35 @@ const Dashboard = {
         const totalDeposits = totalDepositAmount + totalOpeningBalance;
         document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
-        // 2. Total Expenditure Calculation (Expenses + Donations)
+        // 3. Total Income & Expenditure Calculation
+        const totalIncome = (income || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+        const elIncome = document.getElementById('totalIncome');
+        if (elIncome) elIncome.textContent = Utils.formatCurrency(totalIncome);
+
         const totalExpenses = (expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const totalDonations = (donations || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
         const totalExpenditure = totalExpenses + totalDonations;
         const elExpenditure = document.getElementById('totalExpenditure');
         if (elExpenditure) elExpenditure.textContent = Utils.formatCurrency(totalExpenditure);
 
-        // 3. Total Outstanding Loan Calculation
+        // 4. Total Outstanding Loan Calculation
         const totalLoansDisbursed = (loans || []).reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
         const totalLoanCollections = (loanPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
         const totalOutstanding = totalLoansDisbursed - totalLoanCollections;
         const elOutstanding = document.getElementById('totalOutstandingLoan');
         if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
 
-        // 4. Current Total Investments Calculation (Principal - Return Principal)
+        // 5. Current Total Investments Calculation (Principal - Return Principal)
         const totalInvestmentPrincipalOut = (investments || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
         const totalInvestmentPrincipalIn = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.principal_amount) || 0), 0);
         const activeInvestments = totalInvestmentPrincipalOut - totalInvestmentPrincipalIn;
         const elInvestments = document.getElementById('currentTotalInvestments');
         if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
 
-        // 5. Current Balance (Cash In Hand) Calculation
+        // 6. Current Balance (Cash In Hand) Calculation
         // In: Deposits + Opening Balance + Loan Collections + Investment Profit + Income
         // Out: Expenses + Donations + Loans Disbursed + Investments (Principal)
         const investmentProfitAmount = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.profit_amount) || 0), 0);
-        const totalIncome = (income || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
         const totalCashIn = totalDeposits + totalLoanCollections + investmentProfitAmount + totalIncome;
         const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + totalInvestmentPrincipalOut;
