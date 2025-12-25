@@ -57,6 +57,13 @@ const Loans = {
         return result;
     },
 
+    // মাসিক কিস্তি হিসাব
+    calculateMonthlyPayment: function (amount, interestRate, termMonths) {
+        if (!amount || !termMonths) return 0;
+        const totalWithInterest = amount + (amount * interestRate / 100);
+        return Math.round(totalWithInterest / termMonths);
+    },
+
     // শেষ তারিখ হিসাব
     calculateEndDate: function (startDate, months) {
         const date = new Date(startDate || new Date());
