@@ -1,0 +1,18 @@
+- [x] Database Schema Update
+  - [x] `income` table তৈরি করা (db.sql)
+- [x] Backend API Implementation (server.js)
+  - [x] `income` table কে `ALLOWED_TABLES` এ যোগ করা
+- [x] Frontend Logic Implementation
+  - [x] `js/income.js` ফাইল তৈরি করা (Expenses মডিউলের আদলে)
+  - [x] `income.js` এ `getAll`, `add`, `update`, `delete`, `renderTable` ইত্যাদি ফাংশন implement করা
+- [x] UI Implementation (index.html)
+  - [x] Sidebar এ 'আয়' (Income) মেনু যোগ করা
+  - [x] Dashboard এ Income এর জন্য Section তৈরি করা (index.html)
+  - [x] `page-income` section তৈরি করা, যেখানে Table এবং Add/Edit Form থাকবে
+- [x] App Integration (js/app.js)
+  - [x] `App.init` এ `Income` module যোগ করা
+  - [x] Navigation logic এ `income` page handle করা
+- [x] Verification
+  - [x] নতুন আয় যোগ করা (Add Income)
+  - [x] আয়ের তালিকা দেখা (View List)
+  - [x] এডিট এবং ডিলিট টেস্ট করা

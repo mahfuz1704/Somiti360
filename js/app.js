@@ -125,6 +125,7 @@ const App = {
         document.getElementById('addDonationBtn').addEventListener('click', () => Donations.showAddForm());
         document.getElementById('addLoanBtn').addEventListener('click', () => Loans.showAddForm());
         document.getElementById('addExpenseBtn').addEventListener('click', () => Expenses.showAddForm());
+        document.getElementById('addIncomeBtn').addEventListener('click', () => Income.showAddForm());
 
         // User Management
         const addUserBtn = document.getElementById('addUserBtn');
@@ -227,6 +228,10 @@ const App = {
                 await Expenses.populateFilters();
                 Expenses.renderTable();
                 break;
+            case 'income':
+                await Income.populateFilters();
+                Income.renderTable();
+                break;
             case 'reports':
                 document.getElementById('reportOutput').style.display = 'none';
                 break;
@@ -267,6 +272,8 @@ const App = {
                     'loans': 'ঋণ',
                     'donations': 'সহায়তা',
                     'expenses': 'খরচ',
+                    'income': 'আয়',
+                    'reports': 'রিপোর্ট',
                     'reports': 'রিপোর্ট',
                     'users': 'ইউজার'
                 };

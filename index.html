@@ -88,6 +88,10 @@
                     <span class="nav-icon">💵</span>
                     <span class="nav-text">খরচ</span>
                 </li>
+                <li class="nav-item" data-page="income">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-text">আয়</span>
+                </li>
                 <li class="nav-item" data-page="reports">
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">রিপোর্ট</span>
@@ -487,6 +491,57 @@
                 </div>
             </section>
 
+            <!-- Income Page -->
+            <section class="page" id="page-income">
+                <div class="page-header">
+                    <h2>আয় ব্যবস্থাপনা</h2>
+                    <button class="btn btn-primary" id="addIncomeBtn">
+                        <span>+</span> নতুন আয়
+                    </button>
+                </div>
+
+                <div class="filter-bar">
+                    <select id="incomeMonthFilter" onchange="Income.renderFiltered()">
+                        <option value="">সব মাস</option>
+                    </select>
+                    <select id="incomeYearFilter" onchange="Income.renderFiltered()">
+                        <option value="">সব বছর</option>
+                    </select>
+                    <select id="incomeCategoryFilter" onchange="Income.renderFiltered()">
+                        <option value="">সব ক্যাটাগরি</option>
+                    </select>
+                </div>
+
+                <div class="investment-summary">
+                    <div class="summary-card success">
+                        <h4>মোট আয়</h4>
+                        <p id="incomeTotal">৳০</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table" id="incomeTable">
+                            <thead>
+                                <tr>
+                                    <th>তারিখ</th>
+                                    <th>শিরোনাম</th>
+                                    <th>ক্যাটাগরি</th>
+                                    <th>পরিমাণ</th>
+                                    <th>বিবরণ</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incomeList">
+                                <tr class="empty-row">
+                                    <td colspan="6">কোনো আয় নেই</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- Reports Page -->
             <section class="page" id="page-reports">
                 <div class="page-header">
@@ -619,6 +674,7 @@
     <script src="js/donations.js"></script>
     <script src="js/loans.js"></script>
     <script src="js/expenses.js"></script>
+    <script src="js/income.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/reports.js"></script>
     <script src="js/app.js"></script>
