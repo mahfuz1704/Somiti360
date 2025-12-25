@@ -4,16 +4,29 @@
  */
 
 const Auth = {
-    // লগইন যাচাই
+    // লগইন যাচাই (Server API)
     login: async function (username, password) {
-        const user = await Users.getByUsername(username);
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
 
-        if (user && user.password === password) {
-            this.setSession(user);
-            return { success: true };
+            const data = await response.json();
+
+            if (data.success) {
+                this.setSession(data.user);
+                return { success: true };
+            } else {
+                return { success: false, message: data.message || 'ভুল ইউজারনেম বা পাসওয়ার্ড!' };
+            }
+        } catch (error) {
+            console.error('Login Error:', error);
+            return { success: false, message: 'সার্ভার এরর! পরে আবার চেষ্টা করুন।' };
         }
-
-        return { success: false, message: 'ভুল ইউজারনেম বা পাসওয়ার্ড!' };
     },
 
     // লগআউট
