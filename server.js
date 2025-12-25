@@ -50,7 +50,7 @@ app.get('/api/:table', async (req, res) => {
     }
 });
 
-// ডাটা সেভ করার রুট
+// ডাটা সেভ করার রুট (নতুন ইনসার্ট)
 app.post('/api/:table', async (req, res) => {
     try {
         const { table } = req.params;
@@ -63,6 +63,28 @@ app.post('/api/:table', async (req, res) => {
         res.json({ id: result.insertId, ...data });
     } catch (err) {
         console.error(`Error inserting into ${req.params.table}:`, err.message);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// ডাটা আপডেট করার রুট
+app.post('/api/:table/:id', async (req, res) => {
+    try {
+        const { table, id } = req.params;
+        if (!ALLOWED_TABLES.includes(table)) {
+            return res.status(400).json({ error: 'Invalid table name' });
+        }
+
+        const data = req.body;
+        const [result] = await pool.query(`UPDATE ${table} SET ? WHERE id = ?`, [data, id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Record not found' });
+        }
+
+        res.json({ id, ...data });
+    } catch (err) {
+        console.error(`Error updating ${req.params.table}:`, err.message);
         res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });

@@ -6,7 +6,7 @@
 const Loans = {
     // সব লোন লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.LOANS) || [];
+        return await window.apiCall('/loans') || [];
     },
 
     // ID দিয়ে লোন খোঁজা
@@ -30,7 +30,6 @@ const Loans = {
     // নতুন লোন দেওয়া
     add: async function (loanData) {
         const newLoan = {
-            id: Utils.generateId(),
             member_id: loanData.memberId,
             amount: parseFloat(loanData.amount) || 0,
             interest_rate: parseFloat(loanData.interestRate) || 0,
@@ -47,24 +46,14 @@ const Loans = {
             guarantor: loanData.guarantor || ''
         };
 
-        const success = await Storage.save(STORAGE_KEYS.LOANS, newLoan);
+        const result = await window.apiCall('/loans', 'POST', newLoan);
 
-        if (success) {
+        if (result) {
             const member = await Members.getById(loanData.memberId);
             await Activities.add('loan_add', `${member?.name || 'সদস্য'}-কে ${Utils.formatCurrency(newLoan.amount)} লোন দেওয়া হয়েছে`);
         }
 
-        return success ? newLoan : null;
-    },
-
-    // মাসিক কিস্তি হিসাব
-    calculateMonthlyPayment: function (principal, annualRate, months) {
-        if (annualRate === 0) {
-            return principal / months;
-        }
-        const monthlyRate = annualRate / 100 / 12;
-        return (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
-            (Math.pow(1 + monthlyRate, months) - 1);
+        return result;
     },
 
     // শেষ তারিখ হিসাব
@@ -76,31 +65,25 @@ const Loans = {
 
     // লোন delete
     delete: async function (id) {
-        // প্রথমে এই লোনের সব পেমেন্ট মুছতে হবে
+        // পেমেন্টগুলো সার্ভার সাইড (CASCADE) হ্যান্ডেল করা উচিত, তবে সেফটি হিসেবে এখানেও এন্ডপয়েন্ট কল করা হচ্ছে
         const payments = await this.getPaymentsByLoan(id);
         for (const payment of payments) {
-            await Storage.remove(STORAGE_KEYS.LOAN_PAYMENTS, payment.id);
+            await window.apiCall(`/loan_payments/${payment.id}`, 'DELETE');
         }
-        return await Storage.remove(STORAGE_KEYS.LOANS, id);
+        const result = await window.apiCall(`/loans/${id}`, 'DELETE');
+        return result && result.success;
     },
 
     // লোন স্ট্যাটাস আপডেট
     updateStatus: async function (id, status) {
-        const loans = await this.getAll();
-        const index = loans.findIndex(l => l.id === id);
-        if (index === -1) return null;
-
-        loans[index].status = status;
-        // This is a workaround since we don't have a proper update endpoint
-        // In production, you'd have a PUT/PATCH endpoint
-        return loans[index];
+        return await window.apiCall(`/loans/${id}`, 'POST', { status: status });
     },
 
     // ====== Loan Payments ======
 
     // সব পেমেন্ট লোড
     getAllPayments: async function () {
-        return await Storage.load(STORAGE_KEYS.LOAN_PAYMENTS) || [];
+        return await window.apiCall('/loan_payments') || [];
     },
 
     // লোনের পেমেন্ট তালিকা
@@ -112,16 +95,15 @@ const Loans = {
     // কিস্তি পরিশোধ
     addPayment: async function (paymentData) {
         const newPayment = {
-            id: Utils.generateId(),
             loan_id: paymentData.loanId,
             amount: parseFloat(paymentData.amount) || 0,
             payment_date: paymentData.paymentDate || Utils.getCurrentDate(),
             notes: paymentData.notes || ''
         };
 
-        const success = await Storage.save(STORAGE_KEYS.LOAN_PAYMENTS, newPayment);
+        const result = await window.apiCall('/loan_payments', 'POST', newPayment);
 
-        if (success) {
+        if (result) {
             const loan = await this.getById(paymentData.loanId);
             const member = await Members.getById(loan?.member_id);
             await Activities.add('loan_payment', `${member?.name || 'সদস্য'} ${Utils.formatCurrency(newPayment.amount)} কিস্তি পরিশোধ করেছে`);
@@ -130,7 +112,7 @@ const Loans = {
             await this.checkLoanCompletion(paymentData.loanId);
         }
 
-        return success ? newPayment : null;
+        return result;
     },
 
     // লোন পরিশোধ হয়েছে কিনা চেক

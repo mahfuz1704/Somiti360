@@ -37,12 +37,12 @@ const App = {
     setupLoginListener: function () {
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
-            loginForm.addEventListener('submit', function (e) {
+            loginForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const username = document.getElementById('loginUsername').value;
                 const password = document.getElementById('loginPassword').value;
 
-                const result = Auth.login(username, password);
+                const result = await Auth.login(username, password);
 
                 if (result.success) {
                     window.location.reload();
@@ -180,7 +180,7 @@ const App = {
     },
 
     // Load page
-    loadPage: function (pageName) {
+    loadPage: async function (pageName) {
         // Hide all pages
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
@@ -211,7 +211,7 @@ const App = {
                 Members.renderTable();
                 break;
             case 'deposits':
-                Deposits.populateFilters();
+                await Deposits.populateFilters();
                 Deposits.renderTable();
                 break;
             case 'investments':
@@ -224,14 +224,14 @@ const App = {
                 Loans.renderTable();
                 break;
             case 'expenses':
-                Expenses.populateFilters();
+                await Expenses.populateFilters();
                 Expenses.renderTable();
                 break;
             case 'reports':
                 document.getElementById('reportOutput').style.display = 'none';
                 break;
             case 'users':
-                this.renderUsersTable();
+                await this.renderUsersTable();
                 break;
         }
     },
@@ -240,8 +240,8 @@ const App = {
     // User Management Methods
     // ----------------------------------------------------------------
 
-    renderUsersTable: function () {
-        const users = Users.getAll();
+    renderUsersTable: async function () {
+        const users = await Users.getAll();
         const tbody = document.getElementById('usersList');
 
         if (users.length === 0) {
@@ -250,18 +250,31 @@ const App = {
         }
 
         tbody.innerHTML = users.map(user => {
+            // Permissions handling (it might be string from DB)
+            let permissions = user.permissions || '[]';
+            if (typeof permissions === 'string') {
+                try { permissions = JSON.parse(permissions); } catch (e) { permissions = []; }
+            }
+
             // Permissions display
             let perms = 'সব';
-            if (user.role !== 'superadmin' && !user.permissions.includes('all')) {
+            if (user.role !== 'superadmin' && !permissions.includes('all')) {
                 const map = {
+                    'dashboard': 'ড্যাশবোর্ড',
                     'members': 'সদস্য',
                     'deposits': 'জমা',
                     'investments': 'বিনিয়োগ',
+                    'loans': 'ঋণ',
                     'donations': 'সহায়তা',
-                    'reports': 'রিপোর্ট'
+                    'expenses': 'খরচ',
+                    'reports': 'রিপোর্ট',
+                    'users': 'ইউজার'
                 };
-                perms = user.permissions.map(p => map[p] || p).join(', ');
+                perms = permissions.map(p => map[p] || p).join(', ');
+                if (!perms) perms = 'কোনোটিই নয়';
             }
+
+            const isSuperAdmin = user.username === 'superadmin';
 
             return `
                 <tr>
@@ -269,20 +282,18 @@ const App = {
                     <td>${user.username}</td>
                     <td>
                         <span class="badge ${user.role === 'superadmin' ? 'badge-success' :
-                    user.role === 'admin' ? 'badge-primary' :
-                        user.role === 'moderator' ? 'badge-info' : 'badge-secondary'
+                    user.role === 'admin' ? 'badge-primary' : 'badge-secondary'
                 }">
                             ${user.role === 'superadmin' ? 'সুপার অ্যাডমিন' :
-                    user.role === 'admin' ? 'অ্যাডমিন' :
-                        user.role === 'moderator' ? 'মডারেটর' : 'সদস্য'
+                    user.role === 'admin' ? 'অ্যাডমিন' : 'ইউজার'
                 }
                         </span>
                     </td>
                     <td>${perms}</td>
-                    <td>${Utils.formatDateShort(user.createdAt)}</td>
+                    <td>${Utils.formatDateShort(user.created_at || user.createdAt)}</td>
                     <td>
                         <div class="action-buttons">
-                            ${!user.isFixed ? `
+                            ${!isSuperAdmin ? `
                                 <button class="action-btn edit" onclick="App.showEditUserForm('${user.id}')" title="এডিট">📝</button>
                                 <button class="action-btn delete" onclick="App.deleteUser('${user.id}')" title="মুছে ফেলুন">🗑️</button>
                             ` : '<span style="color:#ccc; font-size:0.8rem;">ফিক্সড</span>'}
@@ -312,20 +323,16 @@ const App = {
                 <div class="form-group">
                     <label>রোল (Role)</label>
                     <select id="userRole" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="member">সদস্য (Member)</option>
-                        <option value="moderator">মডারেটর (Moderator)</option>
+                        <option value="user">ইউজার (User)</option>
                         <option value="admin">অ্যাডমিন (Admin)</option>
+                        <option value="superadmin">সুপার অ্যাডমিন (Superadmin)</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label>মেনু পারমিশন</label>
-                    <div class="permission-grid">
-                        <label class="permission-item"><input type="checkbox" name="perms" value="members" checked> সদস্য</label>
-                        <label class="permission-item"><input type="checkbox" name="perms" value="deposits" checked> জমা</label>
-                        <label class="permission-item"><input type="checkbox" name="perms" value="investments" checked> বিনিয়োগ</label>
-                        <label class="permission-item"><input type="checkbox" name="perms" value="donations" checked> সহায়তা</label>
-                        <label class="permission-item"><input type="checkbox" name="perms" value="reports" checked> রিপোর্ট</label>
+                    <div id="permissionsContainer">
+                        ${Users.renderPermissionCheckboxes()}
                     </div>
                 </div>
 
@@ -338,12 +345,22 @@ const App = {
 
         Utils.openModal('নতুন ব্যবহারকারী', formHtml);
 
-        document.getElementById('addUserForm').addEventListener('submit', function (e) {
+        // অটো পারমিশন লজিক
+        const roleSelect = document.getElementById('userRole');
+        if (roleSelect) {
+            roleSelect.addEventListener('change', function () {
+                if (this.value === 'superadmin') {
+                    const checkboxes = document.querySelectorAll('.perm-checkbox');
+                    checkboxes.forEach(cb => cb.checked = true);
+                }
+            });
+        }
+
+        document.getElementById('addUserForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             // Get selected permissions
-            const checkboxes = document.querySelectorAll('input[name="perms"]:checked');
-            const permissions = Array.from(checkboxes).map(cb => cb.value);
+            const permissions = Users.getSelectedPermissions();
 
             const newUser = {
                 name: document.getElementById('userName').value,
@@ -353,7 +370,7 @@ const App = {
                 permissions: permissions
             };
 
-            if (Users.add(newUser)) {
+            if (await Users.add(newUser)) {
                 Utils.closeModal();
                 Utils.showToast('নতুন ব্যবহারকারী তৈরি হয়েছে', 'success');
                 App.renderUsersTable();
@@ -361,9 +378,17 @@ const App = {
         });
     },
 
-    showEditUserForm: function (id) {
-        const user = Users.getById(id);
+    showEditUserForm: async function (id) {
+        const user = await Users.getById(id);
         if (!user) return;
+
+        // Handle permissions (string if from DB)
+        let permissions = user.permissions || '[]';
+        if (typeof permissions === 'string') {
+            try { permissions = JSON.parse(permissions); } catch (e) { permissions = []; }
+        }
+
+        const isSuperAdmin = user.username === 'superadmin';
 
         const formHtml = `
             <form id="editUserForm">
@@ -373,7 +398,7 @@ const App = {
                 </div>
                 <div class="form-group">
                     <label>ইউজারনেম</label>
-                    <input type="text" id="editUserUsername" value="${user.username}" ${user.isFixed ? 'disabled' : ''} required>
+                    <input type="text" id="editUserUsername" value="${user.username}" ${isSuperAdmin ? 'disabled' : ''} required>
                 </div>
                 <div class="form-group">
                     <label>পাসওয়ার্ড (বদল করতে চাইলে লিখুন)</label>
@@ -382,22 +407,17 @@ const App = {
                 
                 <div class="form-group">
                     <label>রোল (Role)</label>
-                    <select id="editUserRole" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" ${user.isFixed ? 'disabled' : ''}>
-                        <option value="member" ${user.role === 'member' ? 'selected' : ''}>সদস্য (Member)</option>
-                        <option value="moderator" ${user.role === 'moderator' ? 'selected' : ''}>মডারেটর (Moderator)</option>
+                    <select id="editUserRole" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" ${isSuperAdmin ? 'disabled' : ''}>
+                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>ইউজার (User)</option>
                         <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>অ্যাডমিন (Admin)</option>
-                        <option value="superadmin" ${user.role === 'superadmin' ? 'selected' : ''} disabled>সুপার অ্যাডমিন</option>
+                        <option value="superadmin" ${user.role === 'superadmin' ? 'selected' : ''}>সুপার অ্যাডমিন (Superadmin)</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label>মেনু পারমিশন</label>
-                    <div class="permission-grid">
-                        <label class="permission-item"><input type="checkbox" name="editPerms" value="members" ${user.permissions.includes('members') || user.permissions.includes('all') ? 'checked' : ''}> সদস্য</label>
-                        <label class="permission-item"><input type="checkbox" name="editPerms" value="deposits" ${user.permissions.includes('deposits') || user.permissions.includes('all') ? 'checked' : ''}> জমা</label>
-                        <label class="permission-item"><input type="checkbox" name="editPerms" value="investments" ${user.permissions.includes('investments') || user.permissions.includes('all') ? 'checked' : ''}> বিনিয়োগ</label>
-                        <label class="permission-item"><input type="checkbox" name="editPerms" value="donations" ${user.permissions.includes('donations') || user.permissions.includes('all') ? 'checked' : ''}> সহায়তা</label>
-                        <label class="permission-item"><input type="checkbox" name="editPerms" value="reports" ${user.permissions.includes('reports') || user.permissions.includes('all') ? 'checked' : ''}> রিপোর্ট</label>
+                    <div id="editPermissionsContainer">
+                        ${isSuperAdmin ? '<p class="text-muted">সুপার অ্যাডমিনের সকল পারমিশন রয়েছে।</p>' : Users.renderPermissionCheckboxes(permissions)}
                     </div>
                 </div>
 
@@ -410,18 +430,27 @@ const App = {
 
         Utils.openModal('ব্যবহারকারী এডিট', formHtml);
 
-        document.getElementById('editUserForm').addEventListener('submit', function (e) {
+        const editRoleSelect = document.getElementById('editUserRole');
+        if (editRoleSelect) {
+            editRoleSelect.addEventListener('change', function () {
+                if (this.value === 'superadmin') {
+                    const checkboxes = document.querySelectorAll('.perm-checkbox');
+                    checkboxes.forEach(cb => cb.checked = true);
+                }
+            });
+        }
+
+        document.getElementById('editUserForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             // Get selected permissions
-            const checkboxes = document.querySelectorAll('input[name="editPerms"]:checked');
-            const permissions = Array.from(checkboxes).map(cb => cb.value);
+            const permsArray = isSuperAdmin ? ['all'] : Users.getSelectedPermissions();
 
             const updatedData = {
                 name: document.getElementById('editUserName').value,
                 username: document.getElementById('editUserUsername').value,
                 role: document.getElementById('editUserRole').value,
-                permissions: permissions
+                permissions: permsArray
             };
 
             const newPass = document.getElementById('editUserPassword').value;
@@ -429,7 +458,7 @@ const App = {
                 updatedData.password = newPass;
             }
 
-            if (Users.update(id, updatedData)) {
+            if (await Users.update(id, updatedData)) {
                 Utils.closeModal();
                 Utils.showToast('ব্যবহারকারী আপডেট করা হয়েছে', 'success');
                 App.renderUsersTable();
@@ -437,9 +466,9 @@ const App = {
         });
     },
 
-    deleteUser: function (id) {
+    deleteUser: async function (id) {
         if (confirm('আপনি কি নিশ্চিত এই ব্যবহারকারীকে মুছে ফেলতে চান?')) {
-            if (Users.delete(id)) {
+            if (await Users.delete(id)) {
                 Utils.showToast('ব্যবহারকারী মুছে ফেলা হয়েছে', 'success');
                 this.renderUsersTable();
             }
@@ -455,13 +484,13 @@ const App = {
         }
     },
 
-    handlePasswordChange: function () {
+    handlePasswordChange: async function () {
         const currentPass = document.getElementById('currentPassword').value;
         const newPass = document.getElementById('newPassword').value;
         const confirmPass = document.getElementById('confirmPassword').value;
 
         const user = Auth.getCurrentUser();
-        const fullUser = Users.getById(user.id); // Get with password
+        const fullUser = await Users.getById(user.id); // Get with password
 
         if (fullUser.password !== currentPass) {
             Utils.showToast('বর্তমান পাসওয়ার্ড ভুল!', 'error');
@@ -478,7 +507,7 @@ const App = {
             return;
         }
 
-        if (Users.resetPassword(user.id, newPass)) {
+        if (await Users.resetPassword(user.id, newPass)) {
             Utils.showToast('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে। আবার লগইন করুন।', 'success');
             document.getElementById('profileModalOverlay').classList.remove('active');
             Auth.logout();

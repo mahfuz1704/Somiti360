@@ -1,71 +1,39 @@
 /**
- * স্বপ্ন - Storage Module
- * MySQL API ব্যবস্থাপনার জন্য helper functions (Asynchronous)
+ * স্বপ্ন - Utilities & API Helper
+ * এপিআই কল এবং কমন ইউটিলিটি ফাংশন
  */
 
-const API_BASE_URL = 'http://localhost:3000/api';
+// গ্লোবাল এপিআই ইউআরএল
+window.API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : '/api';
 
-const Storage = {
-    // API এ data save
-    save: async function (key, data) {
-        try {
-            const table = this._getTableFromKey(key);
-            const response = await fetch(`${API_BASE_URL}/${table}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (!response.ok) {
-                console.error('Storage save failed:', response.status, response.statusText, await response.text());
-                return false;
-            }
-            return response.ok;
-        } catch (e) {
-            console.error('Storage save error:', e);
-            return false;
-        }
-    },
+// গ্লোবাল এপিআই কল হেল্পার
+window.apiCall = async function (endpoint, method = 'GET', data = null) {
+    const url = endpoint.startsWith('http') ? endpoint : `${window.API_URL}${endpoint}`;
+    const options = {
+        method,
+        headers: { 'Content-Type': 'application/json' }
+    };
+    if (data) options.body = JSON.stringify(data);
 
-    // API থেকে data load
-    load: async function (key) {
-        try {
-            const table = this._getTableFromKey(key);
-            const response = await fetch(`${API_BASE_URL}/${table}`);
-            if (!response.ok) return null;
-            return await response.json();
-        } catch (e) {
-            console.error('Storage load error:', e);
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`API Error (${response.status}):`, errorText);
             return null;
         }
-    },
-
-    // Data remove
-    remove: async function (key, id) {
-        try {
-            const table = this._getTableFromKey(key);
-            const response = await fetch(`${API_BASE_URL}/${table}/${id}`, {
-                method: 'DELETE'
-            });
-            return response.ok;
-        } catch (e) {
-            console.error('Storage remove error:', e);
-            return false;
-        }
-    },
-
-    // Key থেকে table name বের করা
-    _getTableFromKey: function (key) {
-        return key.replace('shopno_', '');
-    },
-
-    // নোট: LocalStorage এর মতো clear() ফাংশন সরাসরি API তে নিরাপদ নয়। 
-    // তাই এটি বাদ দেওয়া হয়েছে বা প্রয়োজন অনুযায়ী ইমপ্লিমেন্ট করা যেতে পারে।
+        return await response.json();
+    } catch (error) {
+        console.error('API Call Failed:', error);
+        return null;
+    }
 };
 
 // Utility Functions
 const Utils = {
-    // Unique ID generate (এখনও ক্লায়েন্ট সাইডে আইডি জেনারেট করা যেতে পারে, 
-    // তবে ডাটাবেসে সাধারণত অটো-ইনক্রিমেন্ট বা UUID ব্যবহার করা হয়)
+    // Unique ID generate (ক্লায়েন্ট সাইড লজিকের জন্য)
     generateId: function () {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     },
@@ -168,7 +136,7 @@ const Utils = {
     }
 };
 
-// Storage Keys (Table names match)
+// Storage Keys (Table names)
 const STORAGE_KEYS = {
     MEMBERS: 'members',
     DEPOSITS: 'deposits',
@@ -184,3 +152,8 @@ const STORAGE_KEYS = {
 
 // Default monthly deposit amount
 const DEFAULT_DEPOSIT_AMOUNT = 3000;
+
+// Export Utils Globally
+window.Utils = Utils;
+window.STORAGE_KEYS = STORAGE_KEYS;
+window.DEFAULT_DEPOSIT_AMOUNT = DEFAULT_DEPOSIT_AMOUNT;

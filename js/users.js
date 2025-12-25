@@ -16,109 +16,163 @@ const Users = {
         createdAt: new Date().toISOString()
     },
 
-    // সব ইউজার লোড (সিঙ্ক্রোনাস - localStorage থেকে)
-    getAll: function () {
-        // Authentication এর জন্য localStorage থেকে সিঙ্ক্রোনাস রিড
-        let users = JSON.parse(localStorage.getItem('shopno_users') || '[]');
-
-        // প্রথমবার লোড হলে ডিফল্ট ইউজার সেট করা
-        if (!users || users.length === 0) {
-            users = [this.defaultUser];
-            localStorage.setItem('shopno_users', JSON.stringify(users));
-        } else {
-            // মাইগ্রেশন চেক: যদি পুরনো 'admin' ইউজারনেম থাকে
-            const superAdmin = users.find(u => u.id === 'superadmin');
-            if (superAdmin && superAdmin.username === 'admin') {
-                superAdmin.username = 'superadmin';
-                localStorage.setItem('shopno_users', JSON.stringify(users));
-                console.log('Superadmin username migrated to "superadmin"');
-            }
-        }
-
-        return users;
+    // সব ইউজার লোড
+    getAll: async function () {
+        return await window.apiCall('/users') || [];
     },
 
     // ইউজার খোঁজা (আইডি দিয়ে)
-    getById: function (id) {
-        return this.getAll().find(u => u.id === id);
+    getById: async function (id) {
+        const users = await this.getAll();
+        return users.find(u => u.id === id);
     },
 
     // ইউজার খোঁজা (ইউজারনেম দিয়ে)
-    getByUsername: function (username) {
-        return this.getAll().find(u => u.username === username);
+    getByUsername: async function (username) {
+        const users = await this.getAll();
+        return users.find(u => u.username === username);
     },
 
     // নতুন ইউজার যোগ
-    add: function (user) {
-        const users = this.getAll();
-
+    add: async function (userData) {
         // ইউজারনেম ইউনিক চেক
-        if (users.some(u => u.username === user.username)) {
-            alert('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!');
+        const users = await this.getAll();
+        if (users.some(u => u.username === userData.username)) {
+            Utils.showToast('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!', 'error');
             return false;
         }
 
-        user.id = Utils.generateId();
-        user.createdAt = new Date().toISOString();
-        user.role = user.role || 'member'; // ডিফল্ট রোল member
+        const newUser = {
+            name: userData.name,
+            username: userData.username,
+            password: userData.password,
+            role: userData.role || 'user',
+            permissions: Array.isArray(userData.permissions) ? JSON.stringify(userData.permissions) : userData.permissions || '[]'
+        };
 
-        users.push(user);
-        localStorage.setItem('shopno_users', JSON.stringify(users));
-        return true;
+        const result = await window.apiCall('/users', 'POST', newUser);
+        return result;
     },
 
     // ইউজার আপডেট
-    update: function (id, updatedData) {
-        const users = this.getAll();
-        const index = users.findIndex(u => u.id === id);
+    update: async function (id, updatedData) {
+        const users = await this.getAll();
+        const user = users.find(u => u.id === id);
 
-        if (index === -1) return false;
+        if (!user) return false;
 
         // সুপার অ্যাডমিন এর ইউজারনেম পরিবর্তন করা যাবে না
-        if (users[index].isFixed && updatedData.username !== users[index].username) {
-            alert('সুপার অ্যাডমিনের ইউজারনেম পরিবর্তন করা যাবে না!');
+        if (user.username === 'superadmin' && updatedData.username !== 'superadmin') {
+            Utils.showToast('সুপার অ্যাডমিনের ইউজারনেম পরিবর্তন করা যাবে না!', 'error');
             return false;
         }
 
         // অন্য কারো ইউজারনেম এর সাথে মিল আছে কিনা
         const duplicate = users.find(u => u.username === updatedData.username && u.id !== id);
         if (duplicate) {
-            alert('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!');
+            Utils.showToast('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!', 'error');
             return false;
         }
 
-        users[index] = { ...users[index], ...updatedData };
-        localStorage.setItem('shopno_users', JSON.stringify(users));
-        return true;
+        const data = { ...updatedData };
+        if (data.permissions && Array.isArray(data.permissions)) {
+            data.permissions = JSON.stringify(data.permissions);
+        }
+
+        const result = await window.apiCall(`/users/${id}`, 'POST', data);
+        return result;
     },
 
     // ইউজার মুছা
-    delete: function (id) {
-        let users = this.getAll();
-        const user = users.find(u => u.id === id);
-
+    delete: async function (id) {
+        const user = await this.getById(id);
         if (!user) return false;
 
-        if (user.isFixed) {
-            alert('এই ব্যবহারকারী মুছে ফেলা যাবে না!');
+        if (user.username === 'superadmin') {
+            Utils.showToast('সুপার অ্যাডমিন মুছে ফেলা যাবে না!', 'error');
             return false;
         }
 
-        users = users.filter(u => u.id !== id);
-        localStorage.setItem('shopno_users', JSON.stringify(users));
-        return true;
+        const result = await window.apiCall(`/users/${id}`, 'DELETE');
+        return result && result.success;
     },
 
-    // পাসওয়ার্ড রিসেট
-    resetPassword: function (id, newPassword) {
-        const users = this.getAll();
-        const user = users.find(u => u.id === id);
+    // ইউজার তৈরি/সম্পাদনার ফর্মের জন্য পারমিশন ডিটেইলস
+    getPermissionList: function () {
+        return [
+            { id: 'dashboard', name: 'ড্যাশবোর্ড' },
+            { id: 'members', name: 'সদস্য ব্যবস্থাপনা' },
+            { id: 'deposits', name: 'জমা ব্যবস্থাপনা' },
+            { id: 'investments', name: 'বিনিয়োগ' },
+            { id: 'loans', name: 'ঋণ (লোন)' },
+            { id: 'donations', name: 'সহায়তা/দান' },
+            { id: 'expenses', name: 'খরচ' },
+            { id: 'reports', name: 'রিপোর্ট' },
+            { id: 'users', name: 'ইউজার ম্যানেজমেন্ট' }
+        ];
+    },
 
-        if (user) {
-            user.password = newPassword;
-            localStorage.setItem('shopno_users', JSON.stringify(users));
-            return true;
+    // পারমিশন চেকবক্স রেন্ডার করা
+    renderPermissionCheckboxes: function (selectedPermissions = []) {
+        const permissions = this.getPermissionList();
+        let currentPerms = [];
+
+        try {
+            if (typeof selectedPermissions === 'string') {
+                currentPerms = JSON.parse(selectedPermissions || '[]');
+            } else if (Array.isArray(selectedPermissions)) {
+                currentPerms = selectedPermissions;
+            }
+        } catch (e) {
+            currentPerms = [];
         }
-        return false;
+
+        return `
+            <div class="permission-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                ${permissions.map(p => `
+                    <div class="permission-item" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="perm_${p.id}" value="${p.id}" ${currentPerms.includes(p.id) ? 'checked' : ''} class="perm-checkbox">
+                        <label for="perm_${p.id}" style="margin-bottom: 0; cursor: pointer;">${p.name}</label>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    // ফরম থেকে সিলেক্ট করা পারমিশন সংগ্রহ করা
+    getSelectedPermissions: function () {
+        const checkboxes = document.querySelectorAll('.perm-checkbox:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    },
+
+    // ইউজার টেবিল রেন্ডার করা (App.js থেকে এখানে মুভ করা হতে পারে বা সরাসরি কল হতে পারে)
+    renderTable: async function () {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        const users = await this.getAll();
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">কোনো ইউজার পাওয়া যায়নি</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map((user, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>
+                    <strong>${user.name}</strong><br>
+                    <small class="text-muted">@${user.username}</small>
+                </td>
+                <td><span class="badge ${user.role === 'superadmin' ? 'badge-primary' : user.role === 'admin' ? 'badge-success' : 'badge-secondary'}">${user.role === 'superadmin' ? 'সুপার অ্যাডমিন' : user.role === 'admin' ? 'অ্যাডমিন' : 'ইউজার'}</span></td>
+                <td>${Utils.formatDateShort(user.created_at || user.createdAt)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn edit" onclick="App.showEditUserForm('${user.id}')" title="সম্পাদনা">✏️</button>
+                        ${user.username !== 'superadmin' ? `<button class="action-btn delete" onclick="App.deleteUser('${user.id}')" title="মুছুন">🗑️</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };

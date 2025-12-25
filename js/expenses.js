@@ -9,7 +9,7 @@ const Expenses = {
 
     // সব খরচ লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.EXPENSES) || [];
+        return await window.apiCall('/expenses') || [];
     },
 
     // ID দিয়ে খরচ খোঁজা
@@ -36,7 +36,6 @@ const Expenses = {
     // নতুন খরচ যোগ
     add: async function (expenseData) {
         const newExpense = {
-            id: Utils.generateId(),
             title: expenseData.title,
             category: expenseData.category || 'অন্যান্য',
             amount: parseFloat(expenseData.amount) || 0,
@@ -44,38 +43,31 @@ const Expenses = {
             description: expenseData.description || ''
         };
 
-        const success = await Storage.save(STORAGE_KEYS.EXPENSES, newExpense);
+        const result = await window.apiCall('/expenses', 'POST', newExpense);
 
-        if (success) {
+        if (result) {
             await Activities.add('expense_add', `খরচ: ${newExpense.title} (${Utils.formatCurrency(newExpense.amount)})`);
         }
 
-        return success ? newExpense : null;
+        return result;
     },
 
     // খরচ update
     update: async function (id, expenseData) {
-        const expenses = await this.getAll();
-        const index = expenses.findIndex(e => e.id === id);
-
-        if (index === -1) return null;
-
-        expenses[index] = {
-            ...expenses[index],
+        const updatedExpense = {
             title: expenseData.title,
             category: expenseData.category,
             amount: parseFloat(expenseData.amount),
-            description: expenseData.description,
-            updatedAt: new Date().toISOString()
+            description: expenseData.description
         };
 
-        // Note: We need a proper update endpoint for this
-        return expenses[index];
+        return await window.apiCall(`/expenses/${id}`, 'POST', updatedExpense);
     },
 
     // খরচ delete
     delete: async function (id) {
-        return await Storage.remove(STORAGE_KEYS.EXPENSES, id);
+        const result = await window.apiCall(`/expenses/${id}`, 'DELETE');
+        return result && result.success;
     },
 
     // মোট খরচ

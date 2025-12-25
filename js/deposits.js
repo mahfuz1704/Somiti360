@@ -6,7 +6,7 @@
 const Deposits = {
     // সব জমা লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.DEPOSITS) || [];
+        return await window.apiCall('/deposits') || [];
     },
 
     // ID দিয়ে জমা খোঁজা
@@ -29,8 +29,9 @@ const Deposits = {
 
     // নতুন জমা যোগ
     add: async function (depositData) {
+        const newId = Date.now().toString();
         const newDeposit = {
-            id: Utils.generateId(),
+            id: newId,
             member_id: depositData.memberId,
             amount: parseFloat(depositData.amount) || DEFAULT_DEPOSIT_AMOUNT,
             month: parseInt(depositData.month),
@@ -39,20 +40,30 @@ const Deposits = {
             notes: depositData.note || ''
         };
 
-        const success = await Storage.save(STORAGE_KEYS.DEPOSITS, newDeposit);
+        const result = await window.apiCall('/deposits', 'POST', newDeposit);
 
-        if (success) {
+        if (result) {
             // Activity log
             const member = await Members.getById(depositData.memberId);
             await Activities.add('deposit_add', `${member?.name || 'সদস্য'} ${Utils.formatCurrency(newDeposit.amount)} জমা দিয়েছে`);
+
+            // Dashboard Update
+            if (window.Dashboard) await Dashboard.refresh();
         }
 
-        return success ? newDeposit : null;
+        return result;
     },
 
     // জমা delete
     delete: async function (id) {
-        return await Storage.remove(STORAGE_KEYS.DEPOSITS, id);
+        const result = await window.apiCall(`/deposits/${id}`, 'DELETE');
+
+        if (result && result.success) {
+            // Dashboard Update
+            if (window.Dashboard) await Dashboard.refresh();
+        }
+
+        return result && result.success;
     },
 
     // মোট জমা

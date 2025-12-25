@@ -5,8 +5,8 @@
 
 const Auth = {
     // লগইন যাচাই
-    login: function (username, password) {
-        const user = Users.getByUsername(username);
+    login: async function (username, password) {
+        const user = await Users.getByUsername(username);
 
         if (user && user.password === password) {
             this.setSession(user);
@@ -18,7 +18,7 @@ const Auth = {
 
     // লগআউট
     logout: function () {
-        localStorage.removeItem('shopno_session');
+        sessionStorage.removeItem('shopno_session');
         window.location.reload();
     },
 
@@ -28,12 +28,12 @@ const Auth = {
         const sessionUser = { ...user };
         delete sessionUser.password;
 
-        localStorage.setItem('shopno_session', JSON.stringify(sessionUser));
+        sessionStorage.setItem('shopno_session', JSON.stringify(sessionUser));
     },
 
     // বর্তমান সেশন চেক
     checkSession: function () {
-        const session = localStorage.getItem('shopno_session');
+        const session = sessionStorage.getItem('shopno_session');
         if (!session) {
             return null;
         }
@@ -51,11 +51,24 @@ const Auth = {
         if (!user) return false;
 
         // সুপার অ্যাডমিন এর সব পারমিশন
-        if (user.role === 'superadmin' || (user.permissions && user.permissions.includes('all'))) {
+        if (user.role === 'superadmin') {
             return true;
         }
 
-        return user.permissions && (user.permissions.includes(pageId));
+        // পারমিশন ডাটা চেক
+        try {
+            let permissions = [];
+            if (typeof user.permissions === 'string') {
+                permissions = JSON.parse(user.permissions || '[]');
+            } else if (Array.isArray(user.permissions)) {
+                permissions = user.permissions;
+            }
+
+            return permissions.includes(pageId) || permissions.includes('all');
+        } catch (e) {
+            console.error('Permission parse error:', e);
+            return false;
+        }
     },
 
     // ইনিশিয়ালাইজেশন - অ্যাপ লোড এ চেক করা

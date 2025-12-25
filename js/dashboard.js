@@ -15,58 +15,68 @@ const Dashboard = {
 
     // Stats update
     updateStats: async function () {
-        // ওপেনিং ব্যালান্স কাউন্ট
-        const allMembers = await Members.getAll();
-        const totalOpeningBalance = allMembers.reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
+        // Fetch all data in parallel for efficiency
+        const [
+            members,
+            deposits,
+            loans,
+            loanPayments,
+            expenses,
+            donations,
+            investments,
+            investmentReturns
+        ] = await Promise.all([
+            window.apiCall('/members'),
+            window.apiCall('/deposits'),
+            window.apiCall('/loans'),
+            window.apiCall('/loan_payments'),
+            window.apiCall('/expenses'),
+            window.apiCall('/donations'),
+            window.apiCall('/investments'),
+            window.apiCall('/investment_returns')
+        ]);
 
-        // মোট সদ্চয় (Deposits + Opening Balance)
-        const totalDepositAmount = await Deposits.getTotal();
+        // 1. Total Deposits Calculation
+        const totalOpeningBalance = (members || []).reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
+        const totalDepositAmount = (deposits || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
         const totalDeposits = totalDepositAmount + totalOpeningBalance;
         document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
-        // মোট বিনিয়োগ (Active Principal)
-        const totalInvestments = await Investments.getTotal(); // For calculation
-        const activeInvestments = await Investments.getActiveTotal(); // For display
-        const elInvestments = document.getElementById('currentTotalInvestments');
-        if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
-
-        // সর্বমোট বকেয়া ঋণ (Total Outstanding)
-        const totalOutstanding = await Loans.getTotalOutstanding();
-        const elOutstanding = document.getElementById('totalOutstandingLoan');
-        if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
-
-        // মোট সহায়তা (Donations) - Calculation only
-        const totalDonations = await Donations.getTotal();
-
-        // মোট খরচ (Expenses)
-        const totalExpenses = await Expenses.getTotal();
-        // সর্বমোট ব্যয় (Donations + Expenses)
-        const totalExpenditure = totalDonations + totalExpenses;
+        // 2. Total Expenditure Calculation (Expenses + Donations)
+        const totalExpenses = (expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+        const totalDonations = (donations || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+        const totalExpenditure = totalExpenses + totalDonations;
         const elExpenditure = document.getElementById('totalExpenditure');
         if (elExpenditure) elExpenditure.textContent = Utils.formatCurrency(totalExpenditure);
 
-        // লোন (Loans)
-        const totalLoansDisbursed = await Loans.getTotalDisbursed();
-        const totalLoanCollections = await Loans.getTotalCollected();
+        // 3. Total Outstanding Loan Calculation
+        const totalLoansDisbursed = (loans || []).reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
+        const totalLoanCollections = (loanPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+        const totalOutstanding = totalLoansDisbursed - totalLoanCollections;
+        const elOutstanding = document.getElementById('totalOutstandingLoan');
+        if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
 
-        // Investment Returns (Profit only for Cash In)
-        const investmentCashIn = await Investments.getTotalProfit();
+        // 4. Current Total Investments Calculation (Principal - Return Principal)
+        const totalInvestmentPrincipalOut = (investments || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+        const totalInvestmentPrincipalIn = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.principal_amount) || 0), 0);
+        const activeInvestments = totalInvestmentPrincipalOut - totalInvestmentPrincipalIn;
+        const elInvestments = document.getElementById('currentTotalInvestments');
+        if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
 
-        // বর্তমান ব্যালেন্স (Cash In Hand Calculation)
-        // In: Opening + Deposits + Loan Collections + Investment Returns (Profit)
+        // 5. Current Balance (Cash In Hand) Calculation
+        // In: Deposits + Opening Balance + Loan Collections + Investment Profit
         // Out: Expenses + Donations + Loans Disbursed + Investments (Principal)
+        const investmentProfitAmount = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.profit_amount) || 0), 0);
 
-        const totalCashIn = totalDeposits + totalLoanCollections + investmentCashIn;
-        const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + totalInvestments;
+        const totalCashIn = totalDeposits + totalLoanCollections + investmentProfitAmount;
+        const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + totalInvestmentPrincipalOut;
 
         const balance = totalCashIn - totalCashOut;
-
         document.getElementById('currentBalance').textContent = Utils.formatCurrency(balance);
 
-        // লাস্ট আপডেট
+        // Update Last Updated Timestamp
         const now = new Date();
         document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
-
     },
 
     // Recent activities update
@@ -282,13 +292,13 @@ const Dashboard = {
 const Activities = {
     // সব activities লোড
     getAll: async function () {
-        const data = await Storage.load(STORAGE_KEYS.ACTIVITIES) || [];
+        const data = await window.apiCall('/activities') || [];
         // Map DB columns to our frontend object format
         return data.map(item => ({
             id: item.id,
             type: item.type,
             message: item.action,
-            date: item.timestamp || item.created_at // Handle either column name
+            date: item.timestamp || item.created_at
         })).filter(a => a.message).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
 
@@ -296,14 +306,12 @@ const Activities = {
     add: async function (type, message) {
         const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
         const activity = {
-            id: Utils.generateId(),
             type: type,
             action: message,
             user_id: user ? user.id : null
-            // timestamp omitted to let DB use CURRENT_TIMESTAMP
         };
 
-        return await Storage.save(STORAGE_KEYS.ACTIVITIES, activity);
+        return await window.apiCall('/activities', 'POST', activity);
     },
 
     // সাম্প্রতিক activities

@@ -6,7 +6,7 @@
 const Members = {
     // সব সদস্য লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.MEMBERS) || [];
+        return await window.apiCall('/members') || [];
     },
 
     // ID দিয়ে সদস্য খোঁজা
@@ -17,8 +17,9 @@ const Members = {
 
     // নতুন সদস্য যোগ
     add: async function (memberData) {
+        const newId = Date.now().toString();
         const newMember = {
-            id: Utils.generateId(),
+            id: newId,
             name: memberData.name,
             phone: memberData.phone,
             designation: memberData.designation,
@@ -28,21 +29,18 @@ const Members = {
             status: 'active'
         };
 
-        const success = await Storage.save(STORAGE_KEYS.MEMBERS, newMember);
+        const result = await window.apiCall('/members', 'POST', newMember);
 
-        if (success) {
-            // Activity log (Activities module also needs update, assuming it's async)
+        if (result) {
             await Activities.add('member_add', `নতুন সদস্য যোগ হয়েছে: ${newMember.name}`);
         }
 
-        return success ? newMember : null;
+        return result;
     },
 
-    // সদস্য update
+    // সদস্য update (Using POST /api/members/:id as supported by server.js)
     update: async function (id, memberData) {
-        // SQL-এ সরাসরি ID দিয়ে আপডেট করা ভালো, তবে এখানে বিদ্যমান প্যাটার্ন বজায় রাখা হচ্ছে
         const updatedMember = {
-            id: id,
             name: memberData.name,
             phone: memberData.phone,
             designation: memberData.designation,
@@ -50,20 +48,20 @@ const Members = {
             status: memberData.status || 'active'
         };
 
-        const success = await Storage.save(STORAGE_KEYS.MEMBERS, updatedMember);
-        return success ? updatedMember : null;
+        const result = await window.apiCall(`/members/${id}`, 'POST', updatedMember);
+        return result;
     },
 
     // সদস্য delete
     delete: async function (id) {
         const member = await this.getById(id);
-        const success = await Storage.remove(STORAGE_KEYS.MEMBERS, id);
+        const result = await window.apiCall(`/members/${id}`, 'DELETE');
 
-        if (success && member) {
+        if (result && result.success && member) {
             await Activities.add('member_delete', `সদস্য মুছে ফেলা হয়েছে: ${member.name}`);
         }
 
-        return success;
+        return result && result.success;
     },
 
     // সদস্য search

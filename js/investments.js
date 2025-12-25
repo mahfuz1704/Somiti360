@@ -6,12 +6,12 @@
 const Investments = {
     // সব বিনিয়োগ লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.INVESTMENTS) || [];
+        return await window.apiCall('/investments') || [];
     },
 
     // সব returns লোড
     getAllReturns: async function () {
-        return await Storage.load(STORAGE_KEYS.RETURNS) || [];
+        return await window.apiCall('/returns') || [];
     },
 
     // ID দিয়ে বিনিয়োগ খোঁজা
@@ -23,81 +23,76 @@ const Investments = {
     // নতুন বিনিয়োগ যোগ
     add: async function (investmentData) {
         const newInvestment = {
-            id: Utils.generateId(),
             title: investmentData.title,
-            type: investmentData.category || 'অন্যান্য', // DB column is 'type'
+            type: investmentData.category || 'অন্যান্য',
             amount: parseFloat(investmentData.amount) || 0,
             date: investmentData.date || Utils.getCurrentDate(),
             description: investmentData.description || '',
             status: 'active'
-            // createdAt removed, letting DB handle it
         };
 
-        const success = await Storage.save(STORAGE_KEYS.INVESTMENTS, newInvestment);
+        const result = await window.apiCall('/investments', 'POST', newInvestment);
 
-        if (success) {
+        if (result) {
             Activities.add('investment_add', `নতুন বিনিয়োগ: ${newInvestment.title} (${Utils.formatCurrency(newInvestment.amount)})`);
         }
 
-        return success ? newInvestment : null;
+        return result;
     },
 
     // বিনিয়োগ update
     update: async function (id, investmentData) {
-        // SQL API currently doesn't support generic updates easily without specific endpoints or logic
-        // For now preventing client-side array save which fails. 
-        // TODO: Implement proper UPDATE endpoint in server.js
-        console.warn('Update not fully supported in current API version');
-        return null;
+        const updatedInvestment = {
+            title: investmentData.title,
+            type: investmentData.category,
+            amount: parseFloat(investmentData.amount),
+            status: investmentData.status,
+            description: investmentData.description
+        };
+
+        return await window.apiCall(`/investments/${id}`, 'POST', updatedInvestment);
     },
 
     // বিনিয়োগ delete
     delete: async function (id) {
-        // Returns গুলোও ডিলিট করতে হবে (server side handles usually, but here we might need manual if no cascade)
-        // For simple logical fix:
-        const success = await Storage.remove(STORAGE_KEYS.INVESTMENTS, id);
-
-        // Also try to delete returns associated? 
-        // Server generic delete only deletes one row. 
-        // We will just return success of main delete for now.
-        return success;
+        const result = await window.apiCall(`/investments/${id}`, 'DELETE');
+        return result && result.success;
     },
 
     // লাভ/ক্ষতি যোগ
     addReturn: async function (returnData) {
         let amount = parseFloat(returnData.amount) || 0;
         if (returnData.type === 'loss') {
-            amount = -amount; // Store loss as negative number
+            amount = -amount;
         }
 
         const newReturn = {
-            id: Utils.generateId(),
-            investment_id: returnData.investmentId, // DB column is 'investment_id'
+            investment_id: returnData.investmentId,
             amount: amount,
             date: returnData.date || Utils.getCurrentDate(),
-            notes: returnData.note || '' // DB column is 'notes'
-            // createdAt removed
+            notes: returnData.note || ''
         };
 
-        const success = await Storage.save(STORAGE_KEYS.RETURNS, newReturn);
+        const result = await window.apiCall('/returns', 'POST', newReturn);
 
-        if (success) {
+        if (result) {
             const investment = await this.getById(returnData.investmentId);
             const typeText = returnData.type === 'profit' ? 'লাভ' : 'ক্ষতি';
-            Activities.add('return_add', `${investment?.title || 'বিনিয়োগ'} থেকে ${typeText}: ${Utils.formatCurrency(newReturn.amount)}`);
+            Activities.add('return_add', `${investment?.title || 'বিনিয়োগ'} থেকে ${typeText}: ${Utils.formatCurrency(Math.abs(newReturn.amount))}`);
         }
 
-        return success ? newReturn : null;
+        return result;
     },
 
     // Return delete
     deleteReturn: async function (id) {
-        return await Storage.remove(STORAGE_KEYS.RETURNS, id);
+        const result = await window.apiCall(`/returns/${id}`, 'DELETE');
+        return result && result.success;
     },
 
     // একটি বিনিয়োগের returns
     getReturnsByInvestment: async function (investmentId) {
-        return (await this.getAllReturns()).filter(r => r.investmentId === investmentId);
+        return (await this.getAllReturns()).filter(r => r.investment_id === investmentId);
     },
 
     // একটি বিনিয়োগের মোট লাভ/ক্ষতি

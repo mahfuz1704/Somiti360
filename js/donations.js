@@ -6,7 +6,7 @@
 const Donations = {
     // সব সহায়তা লোড
     getAll: async function () {
-        return await Storage.load(STORAGE_KEYS.DONATIONS) || [];
+        return await window.apiCall('/donations') || [];
     },
 
     // ID দিয়ে সহায়তা খোঁজা
@@ -22,35 +22,37 @@ const Donations = {
         const contact = donationData.contact ? ` [যোগাযোগ: ${donationData.contact}]` : '';
 
         const newDonation = {
-            id: Utils.generateId(),
-            recipient: donationData.recipientName, // DB column is 'recipient'
-            title: donationData.purpose || 'সাধারণ সহায়তা', // DB column is 'title'
+            recipient: donationData.recipientName,
+            title: donationData.purpose || 'সাধারণ সহায়তা',
             amount: parseFloat(donationData.amount) || 0,
             date: donationData.date || Utils.getCurrentDate(),
             description: desc + contact
-            // created_at removed
         };
 
-        const success = await Storage.save(STORAGE_KEYS.DONATIONS, newDonation);
+        const result = await window.apiCall('/donations', 'POST', newDonation);
 
-        if (success) {
+        if (result) {
             Activities.add('donation_add', `সহায়তা: ${newDonation.recipient}-কে ${Utils.formatCurrency(newDonation.amount)}`);
         }
 
-        return success ? newDonation : null;
+        return result;
     },
 
     // সহায়তা update
     update: async function (id, donationData) {
-        // SQL API currently doesn't support generic updates easily without specific endpoints or logic
-        // For now preventing client-side array save which fails. 
-        console.warn('Update not fully supported in current API version');
-        return null;
+        const updatedDonation = {
+            recipient: donationData.recipientName,
+            title: donationData.purpose,
+            amount: parseFloat(donationData.amount),
+            description: donationData.description
+        };
+        return await window.apiCall(`/donations/${id}`, 'POST', updatedDonation);
     },
 
     // সহায়তা delete
     delete: async function (id) {
-        return await Storage.remove(STORAGE_KEYS.DONATIONS, id);
+        const result = await window.apiCall(`/donations/${id}`, 'DELETE');
+        return result && result.success;
     },
 
     // মোট সহায়তা
