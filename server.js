@@ -29,7 +29,7 @@ const pool = mysql.createPool({
 });
 
 // অনুমোদনযোগ্য টেবিল তালিকা
-const ALLOWED_TABLES = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses'];
+const ALLOWED_TABLES = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses', 'income'];
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

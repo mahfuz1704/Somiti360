@@ -116,3 +116,14 @@ CREATE TABLE IF NOT EXISTS expenses (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Income table (সমিতির আয়)
+CREATE TABLE IF NOT EXISTS income (
+    id VARCHAR(50) PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    category VARCHAR(100),
+    amount DECIMAL(15, 2) NOT NULL,
+    date DATE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

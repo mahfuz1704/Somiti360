@@ -24,7 +24,8 @@ const Dashboard = {
             expenses,
             donations,
             investments,
-            investmentReturns
+            investmentReturns,
+            income
         ] = await Promise.all([
             window.apiCall('/members'),
             window.apiCall('/deposits'),
@@ -33,7 +34,8 @@ const Dashboard = {
             window.apiCall('/expenses'),
             window.apiCall('/donations'),
             window.apiCall('/investments'),
-            window.apiCall('/investment_returns')
+            window.apiCall('/investment_returns'),
+            window.apiCall('/income')
         ]);
 
         // 1. Total Deposits Calculation
@@ -64,11 +66,12 @@ const Dashboard = {
         if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
 
         // 5. Current Balance (Cash In Hand) Calculation
-        // In: Deposits + Opening Balance + Loan Collections + Investment Profit
+        // In: Deposits + Opening Balance + Loan Collections + Investment Profit + Income
         // Out: Expenses + Donations + Loans Disbursed + Investments (Principal)
         const investmentProfitAmount = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.profit_amount) || 0), 0);
+        const totalIncome = (income || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
-        const totalCashIn = totalDeposits + totalLoanCollections + investmentProfitAmount;
+        const totalCashIn = totalDeposits + totalLoanCollections + investmentProfitAmount + totalIncome;
         const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + totalInvestmentPrincipalOut;
 
         const balance = totalCashIn - totalCashOut;
