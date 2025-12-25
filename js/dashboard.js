@@ -306,6 +306,7 @@ const Activities = {
     add: async function (type, message) {
         const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
         const activity = {
+            id: Date.now().toString(),
             type: type,
             action: message,
             user_id: user ? user.id : null

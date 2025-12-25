@@ -23,6 +23,7 @@ const Investments = {
     // নতুন বিনিয়োগ যোগ
     add: async function (investmentData) {
         const newInvestment = {
+            id: Date.now().toString(),
             title: investmentData.title,
             type: investmentData.category || 'অন্যান্য',
             amount: parseFloat(investmentData.amount) || 0,

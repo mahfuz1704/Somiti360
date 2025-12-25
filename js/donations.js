@@ -22,6 +22,7 @@ const Donations = {
         const contact = donationData.contact ? ` [যোগাযোগ: ${donationData.contact}]` : '';
 
         const newDonation = {
+            id: Date.now().toString(),
             recipient: donationData.recipientName,
             title: donationData.purpose || 'সাধারণ সহায়তা',
             amount: parseFloat(donationData.amount) || 0,

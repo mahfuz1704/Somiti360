@@ -36,6 +36,7 @@ const Expenses = {
     // নতুন খরচ যোগ
     add: async function (expenseData) {
         const newExpense = {
+            id: Date.now().toString(),
             title: expenseData.title,
             category: expenseData.category || 'অন্যান্য',
             amount: parseFloat(expenseData.amount) || 0,

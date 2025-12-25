@@ -42,7 +42,9 @@ app.get('/api/:table', async (req, res) => {
             return res.status(400).json({ error: 'Invalid table name' });
         }
 
-        const [rows] = await pool.query(`SELECT * FROM ${table} ORDER BY created_at DESC`);
+        // প্রতিটি টেবিলের জন্য সঠিক ORDER BY কলাম
+        const orderColumn = table === 'activities' ? 'timestamp' : 'created_at';
+        const [rows] = await pool.query(`SELECT * FROM ${table} ORDER BY ${orderColumn} DESC`);
         res.json(rows);
     } catch (err) {
         console.error(`Error fetching from ${req.params.table}:`, err.message);

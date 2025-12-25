@@ -30,6 +30,7 @@ const Loans = {
     // নতুন লোন দেওয়া
     add: async function (loanData) {
         const newLoan = {
+            id: Date.now().toString(),
             member_id: loanData.memberId,
             amount: parseFloat(loanData.amount) || 0,
             interest_rate: parseFloat(loanData.interestRate) || 0,
@@ -95,6 +96,7 @@ const Loans = {
     // কিস্তি পরিশোধ
     addPayment: async function (paymentData) {
         const newPayment = {
+            id: Date.now().toString(),
             loan_id: paymentData.loanId,
             amount: parseFloat(paymentData.amount) || 0,
             payment_date: paymentData.paymentDate || Utils.getCurrentDate(),
