@@ -108,6 +108,7 @@ const Users = {
             { id: 'loans', name: 'ঋণ (লোন)' },
             { id: 'donations', name: 'সহায়তা/দান' },
             { id: 'expenses', name: 'খরচ' },
+            { id: 'income', name: 'আয়' },
             { id: 'reports', name: 'রিপোর্ট' },
             { id: 'users', name: 'ইউজার ম্যানেজমেন্ট' }
         ];
