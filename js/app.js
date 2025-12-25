@@ -266,16 +266,15 @@ const App = {
             if (user.role !== 'superadmin' && !permissions.includes('all')) {
                 const map = {
                     'dashboard': 'ড্যাশবোর্ড',
-                    'members': 'সদস্য',
-                    'deposits': 'জমা',
-                    'investments': 'বিনিয়োগ',
-                    'loans': 'ঋণ',
-                    'donations': 'সহায়তা',
-                    'expenses': 'খরচ',
-                    'income': 'আয়',
+                    'members': 'সদস্য ব্যবস্থাপনা',
+                    'deposits': 'আমানত ও সঞ্চয়',
+                    'investments': 'বিনিয়োগ ব্যবস্থাপনা',
+                    'loans': 'ঋণ ব্যবস্থাপনা',
+                    'donations': 'সেবা ও সহায়তা',
+                    'expenses': 'ব্যয় ব্যবস্থাপনা',
+                    'income': 'আয় ও রাজস্ব',
                     'reports': 'রিপোর্ট',
-                    'reports': 'রিপোর্ট',
-                    'users': 'ইউজার'
+                    'users': 'অ্যাডমিন প্যানেল'
                 };
                 perms = permissions.map(p => map[p] || p).join(', ');
                 if (!perms) perms = 'কোনোটিই নয়';
