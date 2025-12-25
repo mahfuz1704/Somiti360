@@ -102,13 +102,13 @@ const Users = {
     getPermissionList: function () {
         return [
             { id: 'dashboard', name: 'ড্যাশবোর্ড' },
-            { id: 'members', name: 'সদস্য ব্যবস্থাপনা' },
             { id: 'deposits', name: 'আমানত ও সঞ্চয়' },
-            { id: 'investments', name: 'বিনিয়োগ ব্যবস্থাপনা' },
             { id: 'loans', name: 'ঋণ ব্যবস্থাপনা' },
-            { id: 'donations', name: 'সেবা ও সহায়তা' },
-            { id: 'expenses', name: 'ব্যয় ব্যবস্থাপনা' },
             { id: 'income', name: 'আয় ও রাজস্ব' },
+            { id: 'expenses', name: 'ব্যয় ব্যবস্থাপনা' },
+            { id: 'donations', name: 'সেবা ও সহায়তা' },
+            { id: 'investments', name: 'বিনিয়োগ ব্যবস্থাপনা' },
+            { id: 'members', name: 'সদস্য ব্যবস্থাপনা' },
             { id: 'reports', name: 'রিপোর্ট' },
             { id: 'users', name: 'অ্যাডমিন প্যানেল' }
         ];
