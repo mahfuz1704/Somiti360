@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const bcrypt = require('bcrypt'); // Import bcrypt
 
 dotenv.config();
 
@@ -24,12 +25,41 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    // Aiven এর জন্য SSL প্রয়োজন হতে পারে
     ssl: process.env.DB_HOST === 'localhost' ? null : { rejectUnauthorized: false }
 });
 
 // অনুমোদনযোগ্য টেবিল তালিকা
 const ALLOWED_TABLES = ['members', 'deposits', 'investments', 'investment_returns', 'donations', 'users', 'activities', 'loans', 'loan_payments', 'expenses', 'income'];
+
+// Login Endpoint
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Find user by username
+        const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+
+        if (users.length === 0) {
+            return res.json({ success: false, message: 'ভুল ইউজারনেম বা পাসওয়ার্ড!' });
+        }
+
+        const user = users[0];
+
+        // Compare password with hash
+        const match = await bcrypt.compare(password, user.password);
+
+        if (match) {
+            // Success: Return user info (excluding password)
+            const { password, ...userWithoutPassword } = user;
+            res.json({ success: true, user: userWithoutPassword });
+        } else {
+            res.json({ success: false, message: 'ভুল ইউজারনেম বা পাসওয়ার্ড!' });
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, message: 'সার্ভার এরর!' });
+    }
+});
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -96,7 +126,15 @@ app.post('/api/:table', async (req, res) => {
             return res.status(400).json({ error: 'Invalid table name' });
         }
 
-        const data = req.body;
+        let data = req.body;
+
+        // If table is 'users', hash the password
+        if (table === 'users' && data.password) {
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+            data = { ...data, password: hashedPassword };
+        }
+
         const [result] = await pool.query(`INSERT INTO ${table} SET ?`, data);
         res.json({ id: result.insertId, ...data });
     } catch (err) {
@@ -106,14 +144,22 @@ app.post('/api/:table', async (req, res) => {
 });
 
 // ডাটা আপডেট করার রুট
-app.post('/api/:table/:id', async (req, res) => {
+app.put('/api/:table/:id', async (req, res) => {
     try {
         const { table, id } = req.params;
         if (!ALLOWED_TABLES.includes(table)) {
             return res.status(400).json({ error: 'Invalid table name' });
         }
 
-        const data = req.body;
+        let data = req.body;
+
+        // If table is 'users' and password is being updated, hash it
+        if (table === 'users' && data.password) {
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(data.password, saltRounds);
+            data = { ...data, password: hashedPassword };
+        }
+
         const [result] = await pool.query(`UPDATE ${table} SET ? WHERE id = ?`, [data, id]);
 
         if (result.affectedRows === 0) {

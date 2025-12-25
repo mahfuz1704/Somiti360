@@ -4,17 +4,7 @@
  */
 
 const Users = {
-    // ডিফল্ট সুপার অ্যাডমিন
-    defaultUser: {
-        id: 'superadmin',
-        name: 'সুপার অ্যাডমিন',
-        username: 'superadmin',
-        password: 'admin123', // In real app, this should be hashed
-        role: 'superadmin',
-        permissions: ['all'],
-        isFixed: true,
-        createdAt: new Date().toISOString()
-    },
+
 
     // সব ইউজার লোড
     getAll: async function () {
@@ -37,15 +27,14 @@ const Users = {
     add: async function (userData) {
         // ইউজারনেম ইউনিক চেক
         const users = await this.getAll();
-        if (users.some(u => u.username === userData.username)) {
+        if (users.some(u => u.username === userData.username.trim())) {
             Utils.showToast('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!', 'error');
             return false;
         }
 
         const newUser = {
-            id: Date.now().toString(),
             name: userData.name,
-            username: userData.username,
+            username: userData.username.trim(),
             password: userData.password,
             role: userData.role || 'user',
             permissions: Array.isArray(userData.permissions) ? JSON.stringify(userData.permissions) : userData.permissions || '[]'
@@ -69,18 +58,21 @@ const Users = {
         }
 
         // অন্য কারো ইউজারনেম এর সাথে মিল আছে কিনা
-        const duplicate = users.find(u => u.username === updatedData.username && u.id !== id);
-        if (duplicate) {
-            Utils.showToast('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!', 'error');
-            return false;
+        if (updatedData.username) {
+            const duplicate = users.find(u => u.username === updatedData.username.trim() && u.id !== id);
+            if (duplicate) {
+                Utils.showToast('এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হচ্ছে!', 'error');
+                return false;
+            }
         }
 
         const data = { ...updatedData };
+        if (data.username) data.username = data.username.trim();
         if (data.permissions && Array.isArray(data.permissions)) {
             data.permissions = JSON.stringify(data.permissions);
         }
 
-        const result = await window.apiCall(`/users/${id}`, 'POST', data);
+        const result = await window.apiCall(`/users/${id}`, 'PUT', data);
         return result;
     },
 
