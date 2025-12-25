@@ -103,14 +103,14 @@ const Users = {
         return [
             { id: 'dashboard', name: 'ড্যাশবোর্ড' },
             { id: 'members', name: 'সদস্য ব্যবস্থাপনা' },
-            { id: 'deposits', name: 'জমা ব্যবস্থাপনা' },
-            { id: 'investments', name: 'বিনিয়োগ' },
-            { id: 'loans', name: 'ঋণ (লোন)' },
-            { id: 'donations', name: 'সহায়তা/দান' },
-            { id: 'expenses', name: 'খরচ' },
-            { id: 'income', name: 'আয়' },
+            { id: 'deposits', name: 'আমানত ও সঞ্চয়' },
+            { id: 'investments', name: 'বিনিয়োগ ব্যবস্থাপনা' },
+            { id: 'loans', name: 'ঋণ ব্যবস্থাপনা' },
+            { id: 'donations', name: 'সেবা ও সহায়তা' },
+            { id: 'expenses', name: 'ব্যয় ব্যবস্থাপনা' },
+            { id: 'income', name: 'আয় ও রাজস্ব' },
             { id: 'reports', name: 'রিপোর্ট' },
-            { id: 'users', name: 'ইউজার ম্যানেজমেন্ট' }
+            { id: 'users', name: 'অ্যাডমিন প্যানেল' }
         ];
     },
 
