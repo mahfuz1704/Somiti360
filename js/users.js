@@ -33,6 +33,7 @@ const Users = {
         }
 
         const newUser = {
+            id: Date.now().toString(),
             name: userData.name,
             username: userData.username.trim(),
             password: userData.password,
