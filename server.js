@@ -24,7 +24,9 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     // Aiven এর জন্য SSL প্রয়োজন হতে পারে
-    ssl: process.env.DB_HOST === 'localhost' ? null : { rejectUnauthorized: false }
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // অনুমোদনযোগ্য টেবিল তালিকা
