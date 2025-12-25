@@ -35,6 +35,41 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Health check endpoint - ডাটাবেস কানেকশন টেস্ট
+app.get('/api/health', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT 1 as test');
+        res.json({
+            status: 'ok',
+            database: 'connected',
+            timestamp: new Date().toISOString(),
+            env: {
+                DB_HOST: process.env.DB_HOST ? 'set' : 'NOT SET',
+                DB_USER: process.env.DB_USER ? 'set' : 'NOT SET',
+                DB_PASS: process.env.DB_PASS ? 'set' : 'NOT SET',
+                DB_NAME: process.env.DB_NAME ? 'set' : 'NOT SET',
+                DB_PORT: process.env.DB_PORT ? 'set' : 'NOT SET'
+            }
+        });
+    } catch (err) {
+        console.error('Health check failed:', err.message);
+        res.status(500).json({
+            status: 'error',
+            database: 'disconnected',
+            error: err.message,
+            code: err.code,
+            timestamp: new Date().toISOString(),
+            env: {
+                DB_HOST: process.env.DB_HOST ? 'set' : 'NOT SET',
+                DB_USER: process.env.DB_USER ? 'set' : 'NOT SET',
+                DB_PASS: process.env.DB_PASS ? 'set' : 'NOT SET',
+                DB_NAME: process.env.DB_NAME ? 'set' : 'NOT SET',
+                DB_PORT: process.env.DB_PORT ? 'set' : 'NOT SET'
+            }
+        });
+    }
+});
+
 // ডাটা আনার রুট
 app.get('/api/:table', async (req, res) => {
     try {
