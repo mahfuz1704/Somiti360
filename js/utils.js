@@ -69,6 +69,12 @@ const Utils = {
         return num.toLocaleString('bn-BD');
     },
 
+    // সালের ফরম্যাট (কমা ছাড়া)
+    formatYear: function (year) {
+        if (year === null || year === undefined) return '';
+        return year.toLocaleString('bn-BD', { useGrouping: false });
+    },
+
     // মাসের নাম (বাংলা)
     getMonthName: function (monthIndex) {
         const months = [

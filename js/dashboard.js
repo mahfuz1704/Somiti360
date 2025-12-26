@@ -133,7 +133,13 @@ const Dashboard = {
         const { month, year } = Utils.getCurrentMonthYear();
         const monthName = Utils.getMonthName(month - 1);
         const titleEl = document.getElementById('monthlyDepositsTitle');
-        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName})`;
+        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName} ${Utils.formatYear(year)})`;
+
+        // ২০২৬ এর আগে কোনো লিস্ট ড্যাশবোর্ডে দেখানো হবে না
+        if (year < 2026) {
+            container.innerHTML = `<tr class="empty-row"><td colspan="3">২০২৬ সালের আগে কোনো ডাটা দেখানো হবে না</td></tr>`;
+            return;
+        }
 
         // সব সদস্য এবং চলতি মাসের জমা লোড
         const [members, deposits] = await Promise.all([
@@ -191,7 +197,7 @@ const Dashboard = {
                     </div>
                     <div class="form-group">
                         <label for="quickDepositYear">বছর</label>
-                        <input type="number" id="quickDepositYear" value="${year}" min="2020" max="2099">
+                        <input type="number" id="quickDepositYear" value="${year < 2026 ? 2026 : year}" min="2026" max="2099">
                     </div>
                 </div>
                 <div class="form-group">
@@ -224,6 +230,11 @@ const Dashboard = {
             date: document.getElementById('quickDepositDate').value
         };
 
+        if (parseInt(depositData.year) < 2026) {
+            Utils.showToast('২০২৬ সালের আগের আমানত এন্ট্রি করা যাবে না', 'error');
+            return;
+        }
+
         // Check duplicate
         const deposits = await Deposits.getAll();
         const existing = deposits.find(d =>
@@ -247,27 +258,45 @@ const Dashboard = {
         }
     },
 
-    // Pending loans update
+    // Pending loans update (Optimized: No N+1 queries)
     updatePendingLoans: async function () {
         const container = document.getElementById('pendingLoansList');
         if (!container) return;
 
-        // Get active loans with outstanding balance
-        const activeLoans = await Loans.getActive();
+        // Fetch all data in parallel
+        const [activeLoans, allPayments, allMembers] = await Promise.all([
+            window.apiCall('/loans'), // Or Loans.getActive() if it fetches all
+            window.apiCall('/loan_payments'),
+            window.apiCall('/members')
+        ]);
 
-        // Get loans with outstanding balance
-        const pendingLoans = [];
-        for (const loan of activeLoans) {
-            const outstanding = await Loans.getOutstanding(loan.id);
-            if (outstanding > 0) {
-                const member = await Members.getById(loan.member_id);
-                pendingLoans.push({
+        if (!activeLoans) return;
+
+        // Create initial maps for fast lookup
+        const memberMap = (allMembers || []).reduce((acc, m) => {
+            acc[m.id] = m.name;
+            return acc;
+        }, {});
+
+        // Pre-calculate total payments per loan
+        const paymentMap = (allPayments || []).reduce((acc, p) => {
+            acc[p.loan_id] = (acc[p.loan_id] || 0) + (parseFloat(p.amount) || 0);
+            return acc;
+        }, {});
+
+        // Calculate outstanding and filter active loans with balance
+        const pendingLoans = activeLoans
+            .filter(loan => (loan.status || 'active').toLowerCase() === 'active')
+            .map(loan => {
+                const totalPaid = paymentMap[loan.id] || 0;
+                const outstanding = (parseFloat(loan.amount) || 0) - totalPaid;
+                return {
                     ...loan,
-                    memberName: member?.name || 'অজানা',
+                    memberName: memberMap[loan.member_id] || 'অজানা',
                     outstanding: outstanding
-                });
-            }
-        }
+                };
+            })
+            .filter(loan => loan.outstanding > 0);
 
         if (pendingLoans.length === 0) {
             container.innerHTML = `<tr class="empty-row"><td colspan="2">কোনো বকেয়া লোন নেই ✅</td></tr>`;
@@ -278,7 +307,6 @@ const Dashboard = {
             <tr>
                 <td><strong>${loan.memberName}</strong></td>
                 <td>${Utils.formatCurrency(loan.outstanding)}</td>
-
             </tr>
         `).join('');
     },
