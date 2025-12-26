@@ -5,8 +5,8 @@
 
 const Reports = {
     // সদস্য রিপোর্ট
-    showMemberReport: function () {
-        const members = Members.getActive();
+    showMemberReport: async function () {
+        const members = await Members.getActive();
 
         if (members.length === 0) {
             Utils.showToast('কোনো সদস্য নেই', 'warning');
@@ -37,15 +37,18 @@ const Reports = {
     },
 
     // সদস্য রিপোর্ট generate
-    generateMemberReport: function (event) {
+    generateMemberReport: async function (event) {
         event.preventDefault();
 
         const memberId = document.getElementById('reportMember').value;
         if (!memberId) return;
 
-        const member = Members.getById(memberId);
-        const deposits = Deposits.getByMember(memberId);
-        const totalDeposit = deposits.reduce((sum, d) => sum + d.amount, 0);
+        const [member, deposits] = await Promise.all([
+            Members.getById(memberId),
+            Deposits.getByMember(memberId)
+        ]);
+
+        const totalDeposit = deposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
 
         Utils.closeModal();
 
@@ -56,7 +59,8 @@ const Reports = {
                     <tr><td><strong>নাম</strong></td><td>${member.name}</td></tr>
                     <tr><td><strong>ফোন</strong></td><td>${member.phone || '-'}</td></tr>
                     <tr><td><strong>ঠিকানা</strong></td><td>${member.address || '-'}</td></tr>
-                    <tr><td><strong>যোগদান</strong></td><td>${Utils.formatDate(member.joinDate)}</td></tr>
+                    <tr><td><strong>পদবি</strong></td><td>${member.designation || '-'}</td></tr>
+                    <tr><td><strong>যোগদান</strong></td><td>${Utils.formatDate(member.join_date)}</td></tr>
                     <tr><td><strong>স্ট্যাটাস</strong></td><td>${member.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</td></tr>
                 </table>
             </div>
@@ -66,11 +70,11 @@ const Reports = {
                 <div class="stats-grid" style="margin-bottom: 16px;">
                     <div class="summary-card">
                         <h4>মোট জমা (ওপেনিং সহ)</h4>
-                        <p>${Utils.formatCurrency(totalDeposit + (member.openingBalance || 0))}</p>
+                        <p>${Utils.formatCurrency(totalDeposit + (parseFloat(member.opening_balance) || 0))}</p>
                     </div>
                     <div class="summary-card">
                         <h4>ওপেনিং ব্যালান্স</h4>
-                        <p>${Utils.formatCurrency(member.openingBalance || 0)}</p>
+                        <p>${Utils.formatCurrency(parseFloat(member.opening_balance) || 0)}</p>
                     </div>
                     <div class="summary-card">
                         <h4>জমার সংখ্যা</h4>
@@ -130,7 +134,7 @@ const Reports = {
     },
 
     // মাসিক রিপোর্ট generate
-    generateMonthlyReport: function (event) {
+    generateMonthlyReport: async function (event) {
         event.preventDefault();
 
         const month = parseInt(document.getElementById('reportMonth').value);
@@ -140,42 +144,44 @@ const Reports = {
         Utils.closeModal();
 
         // Data collect
-        const deposits = Deposits.getByMonthYear(month, year);
-        const totalDeposit = deposits.reduce((sum, d) => sum + d.amount, 0);
+        const [deposits, allInvestments, allReturns, allDonations, allMembers] = await Promise.all([
+            Deposits.getByMonthYear(month, year),
+            Investments.getAll(),
+            Investments.getAllReturns(),
+            Donations.getAll(),
+            Members.getAll()
+        ]);
 
-        const allInvestments = Investments.getAll();
-        const monthInvestments = allInvestments.filter(i => {
+        const totalDeposit = deposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+        const totalNewInvestment = allInvestments.filter(i => {
             const d = new Date(i.date);
             return d.getMonth() + 1 === month && d.getFullYear() === year;
-        });
-        const totalNewInvestment = monthInvestments.reduce((sum, i) => sum + i.amount, 0);
+        }).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
-        const allReturns = Investments.getAllReturns();
         const monthReturns = allReturns.filter(r => {
             const d = new Date(r.date);
             return d.getMonth() + 1 === month && d.getFullYear() === year;
         });
-        const monthProfit = monthReturns.filter(r => r.type === 'profit').reduce((sum, r) => sum + r.amount, 0);
-        const monthLoss = monthReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + r.amount, 0);
+        const monthProfit = monthReturns.filter(r => r.type === 'profit').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+        const monthLoss = monthReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
 
-        const allDonations = Donations.getAll();
         const monthDonations = allDonations.filter(d => {
             const dt = new Date(d.date);
             return dt.getMonth() + 1 === month && dt.getFullYear() === year;
         });
-        const totalDonation = monthDonations.reduce((sum, d) => sum + d.amount, 0);
+        const totalDonation = monthDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
 
         // Opening Balance of new members in this month
-        const newMembers = Members.getAll().filter(m => {
-            const d = new Date(m.joinDate);
+        const newMembers = allMembers.filter(m => {
+            const d = new Date(m.join_date);
             return d.getMonth() + 1 === month && d.getFullYear() === year;
         });
-        const totalOpeningBalance = newMembers.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+        const totalOpeningBalance = newMembers.reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
 
         // Pending members
-        const allMembers = Members.getActive();
-        const depositedMemberIds = deposits.map(d => d.memberId);
-        const pendingMembers = allMembers.filter(m => !depositedMemberIds.includes(m.id));
+        const activeMembers = allMembers.filter(m => m.status === 'active');
+        const depositedMemberIds = deposits.map(d => d.member_id);
+        const pendingMembers = activeMembers.filter(m => !depositedMemberIds.includes(m.id));
 
         const reportContent = `
             <div class="report-section">
@@ -252,7 +258,7 @@ const Reports = {
     },
 
     // বার্ষিক রিপোর্ট generate
-    generateYearlyReport: function (event) {
+    generateYearlyReport: async function (event) {
         event.preventDefault();
 
         const year = parseInt(document.getElementById('reportYear').value);
@@ -260,35 +266,41 @@ const Reports = {
         Utils.closeModal();
 
         // Year data
-        const allDeposits = Deposits.getAll().filter(d => d.year === year);
-        const totalDeposits = allDeposits.reduce((sum, d) => sum + d.amount, 0);
+        const [allDeposits, allInvestments, allReturns, allDonations, allMembers] = await Promise.all([
+            Deposits.getAll(),
+            Investments.getAll(),
+            Investments.getAllReturns(),
+            Donations.getAll(),
+            Members.getAll()
+        ]);
 
-        const allInvestments = Investments.getAll().filter(i => new Date(i.date).getFullYear() === year);
-        const totalInvestments = allInvestments.reduce((sum, i) => sum + i.amount, 0);
+        const yearDeposits = allDeposits.filter(d => d.year === year);
+        const totalDeposits = yearDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+        const totalInvestments = allInvestments.filter(i => new Date(i.date).getFullYear() === year).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
-        const allReturns = Investments.getAllReturns().filter(r => new Date(r.date).getFullYear() === year);
-        const totalProfit = allReturns.filter(r => r.type === 'profit').reduce((sum, r) => sum + r.amount, 0);
-        const totalLoss = allReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + r.amount, 0);
+        const yearReturns = allReturns.filter(r => new Date(r.date).getFullYear() === year);
+        const totalProfit = yearReturns.filter(r => r.type === 'profit').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+        const totalLoss = yearReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
 
-        const allDonations = Donations.getAll().filter(d => new Date(d.date).getFullYear() === year);
-        const totalDonations = allDonations.reduce((sum, d) => sum + d.amount, 0);
+        const yearDonations = allDonations.filter(d => new Date(d.date).getFullYear() === year);
+        const totalDonations = yearDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
 
         // Opening Balance for the year
-        const newMembersYear = Members.getAll().filter(m => new Date(m.joinDate).getFullYear() === year);
-        const totalOpeningBalance = newMembersYear.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+        const newMembersYear = allMembers.filter(m => new Date(m.join_date).getFullYear() === year);
+        const totalOpeningBalance = newMembersYear.reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
 
         // Monthly breakdown
         const monthlyData = [];
         for (let m = 1; m <= 12; m++) {
-            const mDeposits = allDeposits.filter(d => d.month === m);
-            const mReturns = allReturns.filter(r => new Date(r.date).getMonth() + 1 === m);
-            const mProfit = mReturns.filter(r => r.type === 'profit').reduce((sum, r) => sum + r.amount, 0);
-            const mLoss = mReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + r.amount, 0);
-            const mDonations = allDonations.filter(d => new Date(d.date).getMonth() + 1 === m);
+            const mDeposits = yearDeposits.filter(d => d.month === m);
+            const mReturns = yearReturns.filter(r => new Date(r.date).getMonth() + 1 === m);
+            const mProfit = mReturns.filter(r => r.type === 'profit').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+            const mLoss = mReturns.filter(r => r.type === 'loss').reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+            const mDonations = yearDonations.filter(d => new Date(d.date).getMonth() + 1 === m);
 
             // Monthly opening balance
-            const mNewMembers = newMembersYear.filter(m => new Date(m.joinDate).getMonth() + 1 === m);
-            const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (m.openingBalance || 0), 0);
+            const mNewMembers = newMembersYear.filter(m => new Date(m.join_date).getMonth() + 1 === m);
+            const mOpeningBalance = mNewMembers.reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
 
             monthlyData.push({
                 month: Utils.getMonthName(m - 1),

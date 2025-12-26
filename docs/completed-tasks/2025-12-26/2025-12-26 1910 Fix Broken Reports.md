@@ -1,0 +1,5 @@
+- [x] রিপোর্ট মডিউলের বাঘ আইডেন্টিফাই করা (Async/Await সমস্যা)
+- [x] `Reports.showMemberReport` এবং `Reports.generateMemberReport` ফিক্স করা
+- [x] `Reports.showMonthlyReport` এবং `Reports.generateMonthlyReport` ফিক্স করা
+- [x] `Reports.showYearlyReport` এবং `Reports.generateYearlyReport` ফিক্স করা
+- [x] ভেরিফিকেশন এবং টেস্টিং
