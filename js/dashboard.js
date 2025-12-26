@@ -298,8 +298,17 @@ const Dashboard = {
             })
             .filter(loan => loan.outstanding > 0);
 
+        // Force update title if it exists (Fix for caching issues)
+        const pendingLoansCard = container.closest('.card');
+        if (pendingLoansCard) {
+            const titleEl = pendingLoansCard.querySelector('h3');
+            if (titleEl && titleEl.textContent.trim() === 'বকেয়া লোন') {
+                titleEl.textContent = 'চলমান বকেয়া লোন';
+            }
+        }
+
         if (pendingLoans.length === 0) {
-            container.innerHTML = `<tr class="empty-row"><td colspan="2">কোনো বকেয়া লোন নেই ✅</td></tr>`;
+            container.innerHTML = `<tr class="empty-row"><td colspan="2">কোনো চলমান বকেয়া লোন নেই ✅</td></tr>`;
             return;
         }
 
