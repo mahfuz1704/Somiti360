@@ -1471,6 +1471,22 @@ body {
     .permission-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Mobile Login Fix */
+    .login-card {
+        padding: 24px;
+        margin: 0 16px;
+        width: auto;
+        max-width: 100%;
+    }
+
+    .login-logo .logo-icon {
+        font-size: 2.5rem;
+    }
+
+    .login-logo h1 {
+        font-size: 1.8rem;
+    }
 }
 
 .sidebar.collapsed .user-avatar {
