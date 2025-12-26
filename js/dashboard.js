@@ -133,7 +133,13 @@ const Dashboard = {
         const { month, year } = Utils.getCurrentMonthYear();
         const monthName = Utils.getMonthName(month - 1);
         const titleEl = document.getElementById('monthlyDepositsTitle');
-        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName})`;
+        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName} ${Utils.formatNumber(year)})`;
+
+        // ২০২৬ এর আগে কোনো লিস্ট ড্যাশবোর্ডে দেখানো হবে না
+        if (year < 2026) {
+            container.innerHTML = `<tr class="empty-row"><td colspan="3">২০২৬ সালের আগে কোনো ডাটা দেখানো হবে না</td></tr>`;
+            return;
+        }
 
         // সব সদস্য এবং চলতি মাসের জমা লোড
         const [members, deposits] = await Promise.all([
@@ -191,7 +197,7 @@ const Dashboard = {
                     </div>
                     <div class="form-group">
                         <label for="quickDepositYear">বছর</label>
-                        <input type="number" id="quickDepositYear" value="${year}" min="2020" max="2099">
+                        <input type="number" id="quickDepositYear" value="${year < 2026 ? 2026 : year}" min="2026" max="2099">
                     </div>
                 </div>
                 <div class="form-group">
@@ -223,6 +229,11 @@ const Dashboard = {
             amount: document.getElementById('quickDepositAmount').value,
             date: document.getElementById('quickDepositDate').value
         };
+
+        if (parseInt(depositData.year) < 2026) {
+            Utils.showToast('২০২৬ সালের আগের আমানত এন্ট্রি করা যাবে না', 'error');
+            return;
+        }
 
         // Check duplicate
         const deposits = await Deposits.getAll();

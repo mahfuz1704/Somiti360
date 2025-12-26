@@ -6,7 +6,9 @@
 const Deposits = {
     // সব জমা লোড
     getAll: async function () {
-        return await window.apiCall('/deposits') || [];
+        const deposits = await window.apiCall('/deposits') || [];
+        // ২০২৬ এর আগের কোনো ডাটা দেখানো হবে না
+        return deposits.filter(d => d.year >= 2026);
     },
 
     // ID দিয়ে জমা খোঁজা
@@ -196,7 +198,7 @@ const Deposits = {
                     </div>
                     <div class="form-group">
                         <label for="depositYear">বছর *</label>
-                        <input type="number" id="depositYear" required value="${year}" min="2020" max="2099">
+                        <input type="number" id="depositYear" required value="${year < 2026 ? 2026 : year}" min="2026" max="2099">
                     </div>
                 </div>
                 <div class="form-group">
@@ -236,6 +238,11 @@ const Deposits = {
 
         if (!depositData.memberId) {
             Utils.showToast('সদস্য নির্বাচন করুন', 'error');
+            return;
+        }
+
+        if (parseInt(depositData.year) < 2026) {
+            Utils.showToast('২০২৬ সালের আগের আমানত এন্ট্রি করা যাবে না', 'error');
             return;
         }
 
