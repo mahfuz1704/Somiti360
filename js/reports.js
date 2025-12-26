@@ -87,7 +87,7 @@ const Reports = {
                         ${deposits.length > 0 ? deposits.map(d => `
                             <tr>
                                 <td>${Utils.formatDateShort(d.date)}</td>
-                                <td>${Utils.getMonthName(d.month - 1)} ${Utils.formatNumber(d.year)}</td>
+                                <td>${Utils.getMonthName(d.month - 1)} ${Utils.formatYear(d.year)}</td>
                                 <td>${Utils.formatCurrency(d.amount)}</td>
                             </tr>
                         `).join('') : '<tr><td colspan="3" style="text-align: center;">কোনো জমা নেই</td></tr>'}
@@ -228,7 +228,7 @@ const Reports = {
             ` : ''}
         `;
 
-        this.showReport(`${monthName} ${Utils.formatNumber(year)} - মাসিক রিপোর্ট`, reportContent);
+        this.showReport(`${monthName} ${Utils.formatYear(year)} - মাসিক রিপোর্ট`, reportContent);
     },
 
     // বার্ষিক রিপোর্ট
@@ -369,7 +369,7 @@ const Reports = {
             </div>
         `;
 
-        this.showReport(`${Utils.formatNumber(year)} সাল - বার্ষিক রিপোর্ট`, reportContent);
+        this.showReport(`${Utils.formatYear(year)} সাল - বার্ষিক রিপোর্ট`, reportContent);
     },
 
     // রিপোর্ট দেখানো

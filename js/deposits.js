@@ -137,7 +137,7 @@ const Deposits = {
                 <tr>
                     <td>${Utils.formatDateShort(deposit.date)}</td>
                     <td><strong>${member?.name || 'অজানা'}</strong></td>
-                    <td>${monthName} ${Utils.formatNumber(deposit.year)}</td>
+                    <td>${monthName} ${Utils.formatYear(deposit.year)}</td>
                     <td>${Utils.formatCurrency(deposit.amount)}</td>
                     <td><span class="badge badge-success">জমা হয়েছে</span></td>
                     <td>

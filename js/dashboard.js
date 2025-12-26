@@ -133,7 +133,7 @@ const Dashboard = {
         const { month, year } = Utils.getCurrentMonthYear();
         const monthName = Utils.getMonthName(month - 1);
         const titleEl = document.getElementById('monthlyDepositsTitle');
-        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName} ${Utils.formatNumber(year)})`;
+        if (titleEl) titleEl.textContent = `চলতি মাসের জমা (${monthName} ${Utils.formatYear(year)})`;
 
         // ২০২৬ এর আগে কোনো লিস্ট ড্যাশবোর্ডে দেখানো হবে না
         if (year < 2026) {
