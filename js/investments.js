@@ -47,11 +47,12 @@ const Investments = {
             title: investmentData.title,
             type: investmentData.category,
             amount: parseFloat(investmentData.amount),
+            date: investmentData.date,
             status: investmentData.status,
             description: investmentData.description
         };
 
-        return await window.apiCall(`/investments/${id}`, 'POST', updatedInvestment);
+        return await window.apiCall(`/investments/${id}`, 'PUT', updatedInvestment);
     },
 
     // বিনিয়োগ delete
@@ -99,9 +100,8 @@ const Investments = {
     // একটি বিনিয়োগের মোট লাভ/ক্ষতি
     getNetReturn: async function (investmentId) {
         const returns = await this.getReturnsByInvestment(investmentId);
-        return returns.reduce((sum, r) => {
-            return r.type === 'profit' ? sum + r.amount : sum - r.amount;
-        }, 0);
+        // amount ইতিমধ্যে positive/negative আছে (loss = negative)
+        return returns.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
     },
 
     // মোট বিনিয়োগ
@@ -119,15 +119,15 @@ const Investments = {
     // মোট লাভ
     getTotalProfit: async function () {
         return (await this.getAllReturns())
-            .filter(r => r.type === 'profit')
+            .filter(r => (parseFloat(r.amount) || 0) > 0)
             .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
     },
 
     // মোট ক্ষতি
     getTotalLoss: async function () {
         return (await this.getAllReturns())
-            .filter(r => r.type === 'loss')
-            .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+            .filter(r => (parseFloat(r.amount) || 0) < 0)
+            .reduce((sum, r) => sum + Math.abs(parseFloat(r.amount) || 0), 0);
     },
 
     // Summary update
@@ -232,6 +232,8 @@ const Investments = {
             `<option value="${c}" ${c === (investment.type || investment.category) ? 'selected' : ''}>${c}</option>`
         ).join('');
 
+        const investmentDate = investment.date ? new Date(investment.date).toISOString().split('T')[0] : '';
+
         const formHtml = `
             <form id="investmentForm" onsubmit="Investments.handleUpdate(event, '${id}')">
                 <div class="form-group">
@@ -250,12 +252,18 @@ const Investments = {
                         <input type="number" id="investmentAmount" required value="${investment.amount}" min="1">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="investmentStatus">স্ট্যাটাস</label>
-                    <select id="investmentStatus">
-                        <option value="active" ${investment.status === 'active' ? 'selected' : ''}>সক্রিয়</option>
-                        <option value="completed" ${investment.status === 'completed' ? 'selected' : ''}>সম্পন্ন</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="investmentDate">তারিখ</label>
+                        <input type="date" id="investmentDate" value="${investmentDate}">
+                    </div>
+                    <div class="form-group">
+                        <label for="investmentStatus">স্ট্যাটাস</label>
+                        <select id="investmentStatus">
+                            <option value="active" ${investment.status === 'active' ? 'selected' : ''}>সক্রিয়</option>
+                            <option value="completed" ${investment.status === 'completed' ? 'selected' : ''}>সম্পন্ন</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="investmentDescription">বিবরণ</label>
@@ -278,12 +286,13 @@ const Investments = {
 
         const returns = await this.getReturnsByInvestment(investmentId);
         const returnsList = returns.length > 0 ? returns.map(r => {
-            const typeText = r.type === 'profit' ? 'লাভ' : 'ক্ষতি';
-            const typeClass = r.type === 'profit' ? 'badge-success' : 'badge-danger';
+            const amount = parseFloat(r.amount) || 0;
+            const typeText = amount >= 0 ? 'লাভ' : 'ক্ষতি';
+            const typeClass = amount >= 0 ? 'badge-success' : 'badge-danger';
             return `
                 <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
                     <span>${Utils.formatDateShort(r.date)} - <span class="badge ${typeClass}">${typeText}</span></span>
-                    <span>${Utils.formatCurrency(r.amount)}</span>
+                    <span>${Utils.formatCurrency(Math.abs(amount))}</span>
                 </div>
             `;
         }).join('') : '<p style="color: #999; text-align: center;">কোনো লাভ/ক্ষতি নেই</p>';
@@ -364,6 +373,7 @@ const Investments = {
             title: document.getElementById('investmentTitle').value.trim(),
             category: document.getElementById('investmentCategory').value,
             amount: document.getElementById('investmentAmount').value,
+            date: document.getElementById('investmentDate').value,
             status: document.getElementById('investmentStatus').value,
             description: document.getElementById('investmentDescription').value.trim()
         };

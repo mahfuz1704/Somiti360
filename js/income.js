@@ -59,10 +59,11 @@ const Income = {
             title: incomeData.title,
             category: incomeData.category,
             amount: parseFloat(incomeData.amount),
+            date: incomeData.date,
             description: incomeData.description
         };
 
-        return await window.apiCall(`/income/${id}`, 'POST', updatedIncome);
+        return await window.apiCall(`/income/${id}`, 'PUT', updatedIncome);
     },
 
     // আয় delete
@@ -236,6 +237,8 @@ const Income = {
             `<option value="${c}" ${c === income.category ? 'selected' : ''}>${c}</option>`
         ).join('');
 
+        const incomeDate = income.date ? new Date(income.date).toISOString().split('T')[0] : '';
+
         const formHtml = `
             <form id="incomeForm" onsubmit="Income.handleUpdate(event, '${id}')">
                 <div class="form-group">
@@ -253,6 +256,10 @@ const Income = {
                         <label for="incomeAmount">পরিমাণ (টাকা) *</label>
                         <input type="number" id="incomeAmount" required value="${income.amount}" min="1">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="incomeDate">তারিখ</label>
+                    <input type="date" id="incomeDate" value="${incomeDate}">
                 </div>
                 <div class="form-group">
                     <label for="incomeDescription">বিবরণ</label>
@@ -305,6 +312,7 @@ const Income = {
             title: document.getElementById('incomeTitle').value.trim(),
             category: document.getElementById('incomeCategory').value,
             amount: document.getElementById('incomeAmount').value,
+            date: document.getElementById('incomeDate').value,
             description: document.getElementById('incomeDescription').value.trim()
         };
 

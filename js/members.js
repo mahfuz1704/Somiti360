@@ -38,7 +38,7 @@ const Members = {
         return result;
     },
 
-    // সদস্য update (Using POST /api/members/:id as supported by server.js)
+    // সদস্য update (Using PUT /api/members/:id as supported by server.js)
     update: async function (id, memberData) {
         const updatedMember = {
             name: memberData.name,
@@ -48,7 +48,7 @@ const Members = {
             status: memberData.status || 'active'
         };
 
-        const result = await window.apiCall(`/members/${id}`, 'POST', updatedMember);
+        const result = await window.apiCall(`/members/${id}`, 'PUT', updatedMember);
         return result;
     },
 

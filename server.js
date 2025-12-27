@@ -66,6 +66,34 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Password Verify Endpoint - পাসওয়ার্ড যাচাই (bcrypt)
+app.post('/api/verify-password', async (req, res) => {
+    try {
+        const { userId, password } = req.body;
+
+        // Find user by ID
+        const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+
+        if (users.length === 0) {
+            return res.json({ success: false, message: 'ইউজার পাওয়া যায়নি!' });
+        }
+
+        const user = users[0];
+
+        // Compare password with hash
+        const match = await bcrypt.compare(password, user.password);
+
+        if (match) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false, message: 'ভুল পাসওয়ার্ড!' });
+        }
+    } catch (err) {
+        console.error('Password verify error:', err);
+        res.status(500).json({ success: false, message: 'সার্ভার এরর!' });
+    }
+});
+
 // Health check endpoint - ডাটাবেস কানেকশন টেস্ট
 app.get('/api/health', async (req, res) => {
     try {

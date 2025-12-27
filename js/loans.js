@@ -82,9 +82,28 @@ const Loans = {
         return result && result.success;
     },
 
+    // লোন আপডেট
+    update: async function (id, loanData) {
+        const data = {
+            amount: parseFloat(loanData.amount) || 0,
+            interest_rate: parseFloat(loanData.interestRate) || 0,
+            term_months: parseInt(loanData.termMonths) || 12,
+            monthly_payment: this.calculateMonthlyPayment(
+                parseFloat(loanData.amount),
+                parseFloat(loanData.interestRate) || 0,
+                parseInt(loanData.termMonths) || 12
+            ),
+            start_date: loanData.startDate,
+            end_date: this.calculateEndDate(loanData.startDate, parseInt(loanData.termMonths) || 12),
+            purpose: loanData.purpose || '',
+            guarantor: loanData.guarantor || ''
+        };
+        return await window.apiCall(`/loans/${id}`, 'PUT', data);
+    },
+
     // লোন স্ট্যাটাস আপডেট
     updateStatus: async function (id, status) {
-        return await window.apiCall(`/loans/${id}`, 'POST', { status: status });
+        return await window.apiCall(`/loans/${id}`, 'PUT', { status: status });
     },
 
     // ====== Loan Payments ======
@@ -226,6 +245,7 @@ const Loans = {
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td>
                         <div class="action-buttons">
+                            <button class="action-btn edit" onclick="Loans.showEditForm('${loan.id}')" title="এডিট">📝</button>
                             <button class="action-btn view" onclick="Loans.showPaymentForm('${loan.id}')" title="কিস্তি">💵</button>
                             <button class="action-btn view" onclick="Loans.showDetails('${loan.id}')" title="বিস্তারিত">👁️</button>
                             <button class="action-btn delete" onclick="Loans.confirmDelete('${loan.id}')" title="মুছুন">🗑️</button>
@@ -288,6 +308,87 @@ const Loans = {
         `;
 
         Utils.openModal('নতুন লোন', formHtml);
+    },
+
+    // Edit form দেখানো
+    showEditForm: async function (id) {
+        const loan = await this.getById(id);
+        if (!loan) return;
+
+        const member = await Members.getById(loan.member_id);
+        const startDate = loan.start_date ? new Date(loan.start_date).toISOString().split('T')[0] : '';
+
+        const formHtml = `
+            <form id="loanEditForm" onsubmit="Loans.handleUpdate(event, '${id}')">
+                <div class="form-group">
+                    <label>সদস্য</label>
+                    <input type="text" value="${member?.name || 'অজানা'}" disabled>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editLoanAmount">পরিমাণ (টাকা) *</label>
+                        <input type="number" id="editLoanAmount" required min="1" value="${loan.amount}">
+                    </div>
+                    <div class="form-group">
+                        <label for="editLoanInterest">সুদের হার (%)</label>
+                        <input type="number" id="editLoanInterest" value="${loan.interest_rate}" min="0" max="100" step="0.5">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editLoanTerm">মেয়াদ (মাস) *</label>
+                        <input type="number" id="editLoanTerm" required value="${loan.term_months}" min="1" max="120">
+                    </div>
+                    <div class="form-group">
+                        <label for="editLoanStartDate">শুরুর তারিখ</label>
+                        <input type="date" id="editLoanStartDate" value="${startDate}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editLoanPurpose">উদ্দেশ্য</label>
+                    <textarea id="editLoanPurpose">${loan.purpose || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editLoanGuarantor">জামিনদার</label>
+                    <input type="text" id="editLoanGuarantor" value="${loan.guarantor || ''}">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="Utils.closeModal()">বাতিল</button>
+                    <button type="submit" class="btn btn-primary">আপডেট করুন</button>
+                </div>
+            </form>
+        `;
+
+        Utils.openModal('লোন এডিট', formHtml);
+    },
+
+    // Update handler
+    handleUpdate: async function (event, id) {
+        event.preventDefault();
+
+        const loanData = {
+            amount: document.getElementById('editLoanAmount').value,
+            interestRate: document.getElementById('editLoanInterest').value,
+            termMonths: document.getElementById('editLoanTerm').value,
+            startDate: document.getElementById('editLoanStartDate').value,
+            purpose: document.getElementById('editLoanPurpose').value.trim(),
+            guarantor: document.getElementById('editLoanGuarantor').value.trim()
+        };
+
+        if (!loanData.amount) {
+            Utils.showToast('পরিমাণ দিন', 'error');
+            return;
+        }
+
+        const success = await this.update(id, loanData);
+        if (success) {
+            Utils.closeModal();
+            await this.renderTable();
+            if (window.Dashboard) Dashboard.refresh();
+            Utils.showToast('লোন আপডেট হয়েছে', 'success');
+        } else {
+            Utils.showToast('আপডেট করতে ব্যর্থ হয়েছে', 'error');
+        }
     },
 
     // Payment form দেখানো

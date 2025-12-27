@@ -91,6 +91,18 @@ const Users = {
         return result && result.success;
     },
 
+    // পাসওয়ার্ড রিসেট
+    resetPassword: async function (id, newPassword) {
+        const result = await window.apiCall(`/users/${id}`, 'PUT', { password: newPassword });
+        return result;
+    },
+
+    // পাসওয়ার্ড যাচাই (bcrypt hash compare)
+    verifyPassword: async function (userId, password) {
+        const result = await window.apiCall('/verify-password', 'POST', { userId, password });
+        return result && result.success;
+    },
+
     // ইউজার তৈরি/সম্পাদনার ফর্মের জন্য পারমিশন ডিটেইলস
     getPermissionList: function () {
         return [

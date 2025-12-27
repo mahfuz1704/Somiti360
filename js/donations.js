@@ -45,9 +45,10 @@ const Donations = {
             recipient: donationData.recipientName,
             title: donationData.purpose,
             amount: parseFloat(donationData.amount),
+            date: donationData.date,
             description: donationData.description
         };
-        return await window.apiCall(`/donations/${id}`, 'POST', updatedDonation);
+        return await window.apiCall(`/donations/${id}`, 'PUT', updatedDonation);
     },
 
     // সহায়তা delete
@@ -150,14 +151,16 @@ const Donations = {
         if (!donation) return;
 
         const purposeOptions = this.purposes.map(p =>
-            `<option value="${p}" ${p === donation.purpose ? 'selected' : ''}>${p}</option>`
+            `<option value="${p}" ${p === (donation.title || donation.purpose) ? 'selected' : ''}>${p}</option>`
         ).join('');
+
+        const donationDate = donation.date ? new Date(donation.date).toISOString().split('T')[0] : '';
 
         const formHtml = `
             <form id="donationForm" onsubmit="Donations.handleUpdate(event, '${id}')">
                 <div class="form-group">
                     <label for="recipientName">প্রাপকের নাম *</label>
-                    <input type="text" id="recipientName" required value="${donation.recipientName}">
+                    <input type="text" id="recipientName" required value="${donation.recipient || donation.recipientName || ''}">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -172,8 +175,8 @@ const Donations = {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="recipientContact">যোগাযোগ</label>
-                    <input type="text" id="recipientContact" value="${donation.contact || ''}">
+                    <label for="donationDate">তারিখ</label>
+                    <input type="date" id="donationDate" value="${donationDate}">
                 </div>
                 <div class="form-group">
                     <label for="donationDescription">বিবরণ</label>
@@ -227,7 +230,7 @@ const Donations = {
             recipientName: document.getElementById('recipientName').value.trim(),
             purpose: document.getElementById('donationPurpose').value,
             amount: document.getElementById('donationAmount').value,
-            contact: document.getElementById('recipientContact').value.trim(),
+            date: document.getElementById('donationDate').value,
             description: document.getElementById('donationDescription').value.trim()
         };
 
@@ -243,7 +246,7 @@ const Donations = {
         const donation = await this.getById(id);
         if (!donation) return;
 
-        if (Utils.confirm(`আপনি কি "${donation.recipientName}"-এর সহায়তা মুছে ফেলতে চান?`)) {
+        if (Utils.confirm(`আপনি কি "${donation.recipient || donation.recipientName}"-এর সহায়তা মুছে ফেলতে চান?`)) {
             await this.delete(id);
             await this.renderTable();
             await Dashboard.refresh();
