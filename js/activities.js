@@ -79,7 +79,7 @@ const Activities = {
             return `
                 <tr>
                     <td class="text-small">${date}</td>
-                    <td><strong>${activity.user_name || 'সিস্টেম'}</strong></td>
+                    <td><strong>${activity.user_name || activity.user_id || 'সিস্টেম'}</strong></td>
                     <td>${activity.action}</td>
                     <td class="text-center">
                         ${hasDetails ? `
