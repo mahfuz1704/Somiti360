@@ -53,7 +53,10 @@ const Activities = {
     // সাম্প্রতিক অ্যাক্টিভিটি নিয়ে আসা (ড্যাশবোর্ডের জন্য)
     getRecent: async function (limit = 6) {
         const all = await window.apiCall('/activities');
-        return all ? all.slice(0, limit) : [];
+        if (!all) return [];
+        return all
+            .filter(activity => activity.type !== 'login' && activity.type !== 'logout')
+            .slice(0, limit);
     },
 
     // সকল অ্যাক্টিভিটি নিয়ে আসা
