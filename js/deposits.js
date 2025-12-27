@@ -205,12 +205,14 @@ const Deposits = {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="depositAmount">পরিমাণ (টাকা)</label>
-                    <input type="number" id="depositAmount" value="${DEFAULT_DEPOSIT_AMOUNT}" min="1">
+                    <label for="depositAmount">পরিমাণ (টাকা) *</label>
+                    <input type="number" id="depositAmount" value="${DEFAULT_DEPOSIT_AMOUNT}" disabled>
                 </div>
                 <div class="form-group">
-                    <label for="depositDate">জমার তারিখ</label>
-                    <input type="date" id="depositDate" value="${Utils.getCurrentDate()}">
+                    <label for="depositDate">জমার তারিখ *</label>
+                    <input type="date" id="depositDate" value="${Utils.getCurrentDate()}" 
+                        min="${Utils.getDateDaysAgo(5)}" 
+                        max="${Utils.getCurrentDate()}" required>
                 </div>
                 <div class="form-group">
                     <label for="depositNote">মন্তব্য</label>
