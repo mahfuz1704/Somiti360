@@ -113,6 +113,18 @@ const Auth = {
             if (userNameDisplay) userNameDisplay.textContent = user.name;
             if (userRoleDisplay) userRoleDisplay.textContent = user.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন';
 
+            // সাইডবার ফটো আপডেট
+            const sidebarPhoto = document.getElementById('sidebarPhoto');
+            const sidebarDefault = document.getElementById('sidebarDefaultAvatar');
+            if (sidebarPhoto && user.photo) {
+                sidebarPhoto.src = user.photo;
+                sidebarPhoto.style.display = 'block';
+                if (sidebarDefault) sidebarDefault.style.display = 'none';
+            } else if (sidebarPhoto) {
+                sidebarPhoto.style.display = 'none';
+                if (sidebarDefault) sidebarDefault.style.display = 'block';
+            }
+
         } else {
             // লগইন করা নেই
             if (loginSection) loginSection.style.display = 'flex';
