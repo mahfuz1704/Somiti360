@@ -1374,6 +1374,88 @@ body {
     font-size: 2.5rem;
     border: 2px solid var(--primary);
     color: var(--primary);
+    overflow: hidden;
+}
+
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Photo Upload Preview */
+.photo-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.photo-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    border: 2px dashed var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--gray-400);
+    overflow: hidden;
+}
+
+.photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-preview.has-photo {
+    border: 2px solid var(--primary);
+}
+
+.photo-upload-btn {
+    flex: 1;
+}
+
+.photo-upload-btn input[type="file"] {
+    display: none;
+}
+
+.photo-upload-btn label {
+    display: inline-block;
+    padding: 10px 16px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.photo-upload-btn label:hover {
+    background: var(--gray-200);
+}
+
+.user-table-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 1rem;
+    color: var(--gray-400);
+    border: 1px solid var(--gray-200);
+}
+
+.user-table-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .divider {
