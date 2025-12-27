@@ -99,42 +99,74 @@ const Activities = {
         const activity = activities.find(a => a.id === id);
         if (!activity) return;
 
-        const oldVal = activity.old_values ? JSON.parse(activity.old_values) : null;
-        const newVal = activity.new_values ? JSON.parse(activity.new_values) : null;
+        const parseValues = (val) => {
+            if (!val) return null;
+            if (typeof val === 'object') return val;
+            try { return JSON.parse(val); } catch (e) { return val; }
+        };
+
+        const oldVal = parseValues(activity.old_values);
+        const newVal = parseValues(activity.new_values);
+
+        // ফিল্ড নেম ম্যাপিং (বাংলায়)
+        const fieldMap = {
+            'name': 'নাম',
+            'phone': 'ফোন',
+            'amount': 'পরিমাণ',
+            'date': 'তারিখ',
+            'title': 'বিবরণ/শিরোনাম',
+            'category': 'ক্যাটাগরি',
+            'status': 'অবস্থা',
+            'address': 'ঠিকানা',
+            'join_date': 'যোগদানের তারিখ',
+            'designation': 'পদবি',
+            'opening_balance': 'প্রারম্ভিক জমা',
+            'month': 'মাস',
+            'year': 'বছর',
+            'notes': 'নোটস',
+            'interest_rate': 'সুদের হার (%)',
+            'term_months': 'মেয়াদ (মাস)',
+            'monthly_payment': 'মাসিক কিস্তি',
+            'start_date': 'শুরুর তারিখ',
+            'purpose': 'উদ্দেশ্য',
+            'guarantor': 'জামিনদার'
+        };
 
         let content = `
             <div class="activity-details">
-                <p><strong>ইউজার:</strong> ${activity.user_name || 'সিস্টেম'}</p>
-                <p><strong>সময়:</strong> ${new Date(activity.created_at || activity.timestamp || new Date()).toLocaleString('bn-BD')}</p>
+                <p><strong>ইউজার:</strong> ${activity.user_name || activity.user_id || 'সিস্টেম'}</p>
+                <p><strong>সময়:</strong> ${new Date(activity.timestamp || activity.created_at || new Date()).toLocaleString('bn-BD')}</p>
                 <p><strong>কাজ:</strong> ${activity.action}</p>
                 <hr>
-                <div class="diff-container">
+                <div class="diff-container table-responsive">
         `;
 
+        const getFieldName = (key) => fieldMap[key] || key;
+
         if (oldVal && newVal) {
-            content += '<h5>পরিবর্তনসমূহ:</h5><table class="data-table"><thead><tr><th>ফিল্ড</th><th>আগে</th><th>পরে</th></tr></thead><tbody>';
+            content += '<h5>পরিবর্তনসমূহ:</h5><table class="data-table"><thead><tr><th>বিষয়</th><th>আগে</th><th>পরে</th></tr></thead><tbody>';
             const allKeys = new Set([...Object.keys(oldVal), ...Object.keys(newVal)]);
             allKeys.forEach(key => {
-                if (key === 'id' || key === 'created_at' || key === 'user_id') return;
+                if (['id', 'created_at', 'timestamp', 'user_id', 'member_id'].includes(key)) return;
                 const vOld = oldVal[key];
                 const vNew = newVal[key];
                 if (JSON.stringify(vOld) !== JSON.stringify(vNew)) {
-                    content += `<tr><td>${key}</td><td class="bg-light-red">${vOld || '-'}</td><td class="bg-light-green">${vNew || '-'}</td></tr>`;
+                    content += `<tr><td>${getFieldName(key)}</td><td class="bg-light-red">${vOld || '-'}</td><td class="bg-light-green">${vNew || '-'}</td></tr>`;
                 }
             });
             content += '</tbody></table>';
         } else if (newVal) {
             content += '<h5>নতুন তথ্য:</h5><ul class="detail-list">';
             Object.keys(newVal).forEach(key => {
-                if (key === 'id' || key === 'created_at' || key === 'user_id') return;
-                content += `<li><strong>${key}:</strong> ${newVal[key]}</li>`;
+                if (['id', 'created_at', 'timestamp', 'user_id', 'member_id'].includes(key)) return;
+                content += `<li><strong>${getFieldName(key)}:</strong> ${newVal[key]}</li>`;
             });
             content += '</ul>';
         } else if (oldVal) {
             content += '<h5>মুছে ফেলা তথ্য:</h5><ul class="detail-list">';
             Object.keys(oldVal).forEach(key => {
-                if (key === 'id' || key === 'created_at' || key === 'user_id') return;
-                content += `<li><strong>${key}:</strong> ${oldVal[key]}</li>`;
+                if (['id', 'created_at', 'timestamp', 'user_id', 'member_id'].includes(key)) return;
+                content += `<li><strong>${getFieldName(key)}:</strong> ${oldVal[key]}</li>`;
             });
             content += '</ul>';
         }

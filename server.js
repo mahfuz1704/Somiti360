@@ -137,7 +137,7 @@ app.get('/api/:table', async (req, res) => {
         }
 
         // প্রতিটি টেবিলের জন্য সঠিক ORDER BY কলাম
-        const orderColumn = table === 'activities' ? 'created_at' : 'created_at';
+        const orderColumn = table === 'activities' ? 'timestamp' : 'created_at';
 
         let query = `SELECT * FROM ${table} ORDER BY ${orderColumn} DESC`;
 
@@ -147,7 +147,7 @@ app.get('/api/:table', async (req, res) => {
                 SELECT a.*, u.name as user_name 
                 FROM activities a 
                 LEFT JOIN users u ON a.user_id = u.id 
-                ORDER BY a.created_at DESC
+                ORDER BY a.timestamp DESC
             `;
         }
 
