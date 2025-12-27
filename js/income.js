@@ -47,7 +47,7 @@ const Income = {
         const result = await window.apiCall('/income', 'POST', newIncome);
 
         if (result) {
-            await Activities.add('income_add', `আয়: ${newIncome.title} (${Utils.formatCurrency(newIncome.amount)})`);
+            await Activities.add('income_add', `আয়: ${newIncome.title} (${Utils.formatCurrency(newIncome.amount)})`, null, newIncome);
         }
 
         return result;
@@ -55,6 +55,7 @@ const Income = {
 
     // আয় update
     update: async function (id, incomeData) {
+        const oldIncome = await this.getById(id);
         const updatedIncome = {
             title: incomeData.title,
             category: incomeData.category,
@@ -63,12 +64,20 @@ const Income = {
             description: incomeData.description
         };
 
-        return await window.apiCall(`/income/${id}`, 'PUT', updatedIncome);
+        const result = await window.apiCall(`/income/${id}`, 'PUT', updatedIncome);
+        if (result && oldIncome) {
+            await Activities.add('income_update', `আয় '${oldIncome.title}' এর তথ্য আপডেট করা হয়েছে`, oldIncome, { ...oldIncome, ...updatedIncome });
+        }
+        return result;
     },
 
     // আয় delete
     delete: async function (id) {
+        const income = await this.getById(id);
         const result = await window.apiCall(`/income/${id}`, 'DELETE');
+        if (result && result.success && income) {
+            await Activities.add('income_delete', `আয় মুছে ফেলা হয়েছে: ${income.title}`, income, null);
+        }
         return result && result.success;
     },
 
@@ -342,3 +351,5 @@ const Income = {
         }
     }
 };
+
+window.Income = Income;

@@ -6,10 +6,30 @@
 const Dashboard = {
     // Dashboard refresh
     refresh: async function () {
-        await this.updateStats();
-        await this.updateRecentActivities();
-        await this.updateMonthlyDeposits();
-        await this.updatePendingLoans();
+        try {
+            await this.updateStats();
+        } catch (e) {
+            console.error('Error updating stats:', e);
+        }
+
+        try {
+            await this.updateRecentActivities();
+        } catch (e) {
+            console.error('Error updating recent activities:', e);
+        }
+
+        try {
+            await this.updateMonthlyDeposits();
+        } catch (e) {
+            console.error('Error updating monthly deposits:', e);
+        }
+
+        try {
+            await this.updatePendingLoans();
+        } catch (e) {
+            console.error('Error updating pending loans:', e);
+        }
+
         this.updateDate();
     },
 
@@ -38,31 +58,37 @@ const Dashboard = {
             window.apiCall('/income')
         ]);
 
-        // 1. Total Deposits Calculation
+        // ২০২৬ এর ফিল্টার প্রয়োগ (শুধু জমার জন্য - ইউজার রিকোয়ারমেন্ট অনুযায়ী)
+        const filterYear = 2026;
+
+        // 1. Total Deposits Calculation (Filtered by year >= 2026)
         const totalOpeningBalance = (members || []).reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
-        const totalDepositAmount = (deposits || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+        const validDeposits = (deposits || []).filter(d => (parseInt(d.year) || 0) >= filterYear);
+        const totalDepositAmount = validDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
         const totalDeposits = totalDepositAmount + totalOpeningBalance;
         document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
-        // 3. Total Income & Expenditure Calculation
+        // 3. Total Income & Expenditure Calculation (Unfiltered)
         const totalIncome = (income || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
         const elIncome = document.getElementById('totalIncome');
         if (elIncome) elIncome.textContent = Utils.formatCurrency(totalIncome);
 
         const totalExpenses = (expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const totalDonations = (donations || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+
         const totalExpenditure = totalExpenses + totalDonations;
         const elExpenditure = document.getElementById('totalExpenditure');
         if (elExpenditure) elExpenditure.textContent = Utils.formatCurrency(totalExpenditure);
 
-        // 4. Total Outstanding Loan Calculation
+        // 4. Total Outstanding Loan Calculation (Unfiltered)
         const totalLoansDisbursed = (loans || []).reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
         const totalLoanCollections = (loanPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
         const totalOutstanding = totalLoansDisbursed - totalLoanCollections;
         const elOutstanding = document.getElementById('totalOutstandingLoan');
         if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
 
-        // 5. Current Total Investments Calculation (Total of ACTIVE investments)
+        // 5. Current Total Investments Calculation (Total of ACTIVE investments - Unfiltered)
         const activeInvestmentsList = (investments || []).filter(i => (i.status || 'active').toLowerCase() === 'active');
         const activeInvestmentsTotal = activeInvestmentsList.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
@@ -70,10 +96,8 @@ const Dashboard = {
         if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestmentsTotal);
 
         // 6. Current Balance (Cash In Hand) Calculation
-        // In: Deposits + Opening Balance + Loan Collections + Investment Net Return (Profit/Loss) + Income
-        // Out: Expenses + Donations + Loans Disbursed + ACTIVE Investments (Principal currently out)
-
-        // Investment returns table stores profit as positive and loss as negative in 'amount' column
+        // In: Filtered Deposits + Opening Balance + Loan Collections + Net Investment Returns + Income
+        // Out: Expenses + Donations + Loans Disbursed + ACTIVE Investments
         const investmentNetReturn = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
 
         const totalCashIn = totalDeposits + totalLoanCollections + investmentNetReturn + totalIncome;
@@ -89,42 +113,26 @@ const Dashboard = {
 
     // Recent activities update
     updateRecentActivities: async function () {
-        const activities = await Activities.getRecent(6);
+        const activities = await window.Activities.getRecent(6);
         const container = document.getElementById('recentActivities');
 
-        if (activities.length === 0) {
+        if (!activities || activities.length === 0) {
             container.innerHTML = '<li class="empty-state">কোনো কার্যক্রম নেই</li>';
             return;
         }
 
         container.innerHTML = activities.map(activity => {
-            const icon = this.getActivityIcon(activity.type);
+            const icon = window.Activities.getIcon(activity.type);
+            const dateStr = activity.created_at || activity.timestamp || new Date();
+            const date = new Date(dateStr).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
             return `
                 <li>
                     <span>${icon}</span>
-                    <span>${activity.message}</span>
-                    <small style="color: #999; margin-left: auto;">${Utils.formatDateShort(activity.date)}</small>
+                    <span>${activity.action}</span>
+                    <small style="color: #999; margin-left: auto;">${date}</small>
                 </li>
             `;
         }).join('');
-    },
-
-
-
-    // Activity icon
-    getActivityIcon: function (type) {
-        const icons = {
-            'member_add': '👤',
-            'member_delete': '❌',
-            'deposit_add': '💰',
-            'investment_add': '📈',
-            'return_add': '💹',
-            'donation_add': '🤝',
-            'expense_add': '💸',
-            'loan_add': '🏦',
-            'loan_payment': '💳'
-        };
-        return icons[type] || '📌';
     },
 
     // Monthly Deposits Update (Full Statement)
@@ -314,10 +322,22 @@ const Dashboard = {
             return;
         }
 
-        container.innerHTML = pendingLoans.map(loan => `
+        // Aggregate by member (User Requirement: One row per member)
+        const aggregatedPending = Object.values(pendingLoans.reduce((acc, loan) => {
+            if (!acc[loan.member_id]) {
+                acc[loan.member_id] = {
+                    memberName: loan.memberName,
+                    totalOutstanding: 0
+                };
+            }
+            acc[loan.member_id].totalOutstanding += loan.outstanding;
+            return acc;
+        }, {}));
+
+        container.innerHTML = aggregatedPending.map(item => `
             <tr>
-                <td><strong>${loan.memberName}</strong></td>
-                <td>${Utils.formatCurrency(loan.outstanding)}</td>
+                <td><strong>${item.memberName}</strong></td>
+                <td>${Utils.formatCurrency(item.totalOutstanding)}</td>
             </tr>
         `).join('');
     },
@@ -331,38 +351,4 @@ const Dashboard = {
     }
 };
 
-/**
- * Activities - কার্যক্রম log
- */
-const Activities = {
-    // সব activities লোড
-    getAll: async function () {
-        const data = await window.apiCall('/activities') || [];
-        // Map DB columns to our frontend object format
-        return data.map(item => ({
-            id: item.id,
-            type: item.type,
-            message: item.action,
-            date: item.timestamp || item.created_at
-        })).filter(a => a.message).sort((a, b) => new Date(b.date) - new Date(a.date));
-    },
-
-    // নতুন activity যোগ
-    add: async function (type, message) {
-        const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
-        const activity = {
-            id: Date.now().toString(),
-            type: type,
-            action: message,
-            user_id: user ? user.id : null
-        };
-
-        return await window.apiCall('/activities', 'POST', activity);
-    },
-
-    // সাম্প্রতিক activities
-    getRecent: async function (count = 10) {
-        const all = await this.getAll();
-        return all.slice(0, count);
-    }
-};
+window.Dashboard = Dashboard;

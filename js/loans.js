@@ -51,7 +51,7 @@ const Loans = {
 
         if (result) {
             const member = await Members.getById(loanData.memberId);
-            await Activities.add('loan_add', `${member?.name || 'সদস্য'}-কে ${Utils.formatCurrency(newLoan.amount)} লোন দেওয়া হয়েছে`);
+            await Activities.add('loan_add', `${member?.name || 'সদস্য'}-কে ${Utils.formatCurrency(newLoan.amount)} লোন দেওয়া হয়েছে`, null, newLoan);
         }
 
         return result;
@@ -73,17 +73,23 @@ const Loans = {
 
     // লোন delete
     delete: async function (id) {
+        const loan = await this.getById(id);
         // পেমেন্টগুলো সার্ভার সাইড (CASCADE) হ্যান্ডেল করা উচিত, তবে সেফটি হিসেবে এখানেও এন্ডপয়েন্ট কল করা হচ্ছে
         const payments = await this.getPaymentsByLoan(id);
         for (const payment of payments) {
             await window.apiCall(`/loan_payments/${payment.id}`, 'DELETE');
         }
         const result = await window.apiCall(`/loans/${id}`, 'DELETE');
+        if (result && result.success && loan) {
+            const member = await Members.getById(loan.member_id);
+            await Activities.add('loan_delete', `${member?.name || 'সদস্য'} এর ${Utils.formatCurrency(loan.amount)} এর লোন মুছে ফেলা হয়েছে`, loan, null);
+        }
         return result && result.success;
     },
 
     // লোন আপডেট
     update: async function (id, loanData) {
+        const oldLoan = await this.getById(id);
         const data = {
             amount: parseFloat(loanData.amount) || 0,
             interest_rate: parseFloat(loanData.interestRate) || 0,
@@ -98,7 +104,12 @@ const Loans = {
             purpose: loanData.purpose || '',
             guarantor: loanData.guarantor || ''
         };
-        return await window.apiCall(`/loans/${id}`, 'PUT', data);
+        const result = await window.apiCall(`/loans/${id}`, 'PUT', data);
+        if (result && oldLoan) {
+            const member = await Members.getById(oldLoan.member_id);
+            await Activities.add('loan_update', `${member?.name || 'সদস্য'} এর লোন আপডেট করা হয়েছে`, oldLoan, { ...oldLoan, ...data });
+        }
+        return result;
     },
 
     // লোন স্ট্যাটাস আপডেট
@@ -134,7 +145,7 @@ const Loans = {
         if (result) {
             const loan = await this.getById(paymentData.loanId);
             const member = await Members.getById(loan?.member_id);
-            await Activities.add('loan_payment', `${member?.name || 'সদস্য'} ${Utils.formatCurrency(newPayment.amount)} কিস্তি পরিশোধ করেছে`);
+            await Activities.add('loan_payment', `${member?.name || 'সদস্য'} ${Utils.formatCurrency(newPayment.amount)} কিস্তি পরিশোধ করেছে`, null, newPayment);
 
             // চেক করা লোন পরিশোধ হয়েছে কিনা
             await this.checkLoanCompletion(paymentData.loanId);
@@ -278,7 +289,7 @@ const Loans = {
                         <input type="number" id="loanAmount" required min="1" placeholder="০">
                     </div>
                     <div class="form-group">
-                        <label for="loanInterest">সুদের হার (%)</label>
+                        <label for="loanInterest">বিলম্ব ফি (%)</label>
                         <input type="number" id="loanInterest" value="0" min="0" max="100" step="0.5">
                     </div>
                 </div>
@@ -330,7 +341,7 @@ const Loans = {
                         <input type="number" id="editLoanAmount" required min="1" value="${loan.amount}">
                     </div>
                     <div class="form-group">
-                        <label for="editLoanInterest">সুদের হার (%)</label>
+                        <label for="editLoanInterest">বিলম্ব ফি (%)</label>
                         <input type="number" id="editLoanInterest" value="${loan.interest_rate}" min="0" max="100" step="0.5">
                     </div>
                 </div>
@@ -469,7 +480,7 @@ const Loans = {
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                     <div><strong>মূল লোন:</strong> ${Utils.formatCurrency(loan.amount)}</div>
-                    <div><strong>সুদের হার:</strong> ${loan.interest_rate}%</div>
+                    <div><strong>বিলম্ব ফি:</strong> ${loan.interest_rate}%</div>
                     <div><strong>মেয়াদ:</strong> ${loan.term_months} মাস</div>
                     <div><strong>মাসিক কিস্তি:</strong> ${Utils.formatCurrency(loan.monthly_payment)}</div>
                     <div><strong>শুরুর তারিখ:</strong> ${Utils.formatDateShort(loan.start_date)}</div>
@@ -569,3 +580,5 @@ const Loans = {
         }
     }
 };
+
+window.Loans = Loans;

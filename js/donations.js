@@ -33,7 +33,7 @@ const Donations = {
         const result = await window.apiCall('/donations', 'POST', newDonation);
 
         if (result) {
-            Activities.add('donation_add', `সহায়তা: ${newDonation.recipient}-কে ${Utils.formatCurrency(newDonation.amount)}`);
+            await Activities.add('donation_add', `সহায়তা: ${newDonation.recipient}-কে ${Utils.formatCurrency(newDonation.amount)}`, null, newDonation);
         }
 
         return result;
@@ -41,6 +41,7 @@ const Donations = {
 
     // সহায়তা update
     update: async function (id, donationData) {
+        const oldDonation = await this.getById(id);
         const updatedDonation = {
             recipient: donationData.recipientName,
             title: donationData.purpose,
@@ -48,12 +49,20 @@ const Donations = {
             date: donationData.date,
             description: donationData.description
         };
-        return await window.apiCall(`/donations/${id}`, 'PUT', updatedDonation);
+        const result = await window.apiCall(`/donations/${id}`, 'PUT', updatedDonation);
+        if (result && oldDonation) {
+            await Activities.add('donation_update', `সহায়তা '${oldDonation.recipient}' এর তথ্য আপডেট করা হয়েছে`, oldDonation, { ...oldDonation, ...updatedDonation });
+        }
+        return result;
     },
 
     // সহায়তা delete
     delete: async function (id) {
+        const donation = await this.getById(id);
         const result = await window.apiCall(`/donations/${id}`, 'DELETE');
+        if (result && result.success && donation) {
+            await Activities.add('donation_delete', `সহায়তা মুছে ফেলা হয়েছে: ${donation.recipient}`, donation, null);
+        }
         return result && result.success;
     },
 
@@ -254,3 +263,5 @@ const Donations = {
         }
     }
 };
+
+window.Donations = Donations;

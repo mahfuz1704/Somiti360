@@ -30,9 +30,8 @@ const Members = {
         };
 
         const result = await window.apiCall('/members', 'POST', newMember);
-
         if (result) {
-            await Activities.add('member_add', `নতুন সদস্য যোগ হয়েছে: ${newMember.name}`);
+            await Activities.add('member_add', `নতুন সদস্য যোগ হয়েছে: ${newMember.name}`, null, newMember);
         }
 
         return result;
@@ -40,6 +39,7 @@ const Members = {
 
     // সদস্য update (Using PUT /api/members/:id as supported by server.js)
     update: async function (id, memberData) {
+        const oldMember = await this.getById(id);
         const updatedMember = {
             name: memberData.name,
             phone: memberData.phone,
@@ -49,6 +49,9 @@ const Members = {
         };
 
         const result = await window.apiCall(`/members/${id}`, 'PUT', updatedMember);
+        if (result && oldMember) {
+            await Activities.add('member_update', `সদস্য '${oldMember.name}' এর তথ্য আপডেট করা হয়েছে`, oldMember, { ...oldMember, ...updatedMember });
+        }
         return result;
     },
 
@@ -58,7 +61,7 @@ const Members = {
         const result = await window.apiCall(`/members/${id}`, 'DELETE');
 
         if (result && result.success && member) {
-            await Activities.add('member_delete', `সদস্য মুছে ফেলা হয়েছে: ${member.name}`);
+            await Activities.add('member_delete', `সদস্য মুছে ফেলা হয়েছে: ${member.name}`, member, null);
         }
 
         return result && result.success;
@@ -350,3 +353,5 @@ const Members = {
         ).join('');
     }
 };
+
+window.Members = Members;

@@ -47,7 +47,7 @@ const Expenses = {
         const result = await window.apiCall('/expenses', 'POST', newExpense);
 
         if (result) {
-            await Activities.add('expense_add', `খরচ: ${newExpense.title} (${Utils.formatCurrency(newExpense.amount)})`);
+            await Activities.add('expense_add', `খরচ: ${newExpense.title} (${Utils.formatCurrency(newExpense.amount)})`, null, newExpense);
         }
 
         return result;
@@ -55,6 +55,7 @@ const Expenses = {
 
     // খরচ update
     update: async function (id, expenseData) {
+        const oldExpense = await this.getById(id);
         const updatedExpense = {
             title: expenseData.title,
             category: expenseData.category,
@@ -63,12 +64,20 @@ const Expenses = {
             description: expenseData.description
         };
 
-        return await window.apiCall(`/expenses/${id}`, 'PUT', updatedExpense);
+        const result = await window.apiCall(`/expenses/${id}`, 'PUT', updatedExpense);
+        if (result && oldExpense) {
+            await Activities.add('expense_update', `ব্যয় '${oldExpense.title}' এর তথ্য আপডেট করা হয়েছে`, oldExpense, { ...oldExpense, ...updatedExpense });
+        }
+        return result;
     },
 
     // খরচ delete
     delete: async function (id) {
+        const expense = await this.getById(id);
         const result = await window.apiCall(`/expenses/${id}`, 'DELETE');
+        if (result && result.success && expense) {
+            await Activities.add('expense_delete', `ব্যয় মুছে ফেলা হয়েছে: ${expense.title}`, expense, null);
+        }
         return result && result.success;
     },
 
@@ -356,3 +365,5 @@ const Expenses = {
         }
     }
 };
+
+window.Expenses = Expenses;
