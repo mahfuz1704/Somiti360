@@ -90,6 +90,13 @@ const Utils = {
         return new Date().toISOString().split('T')[0];
     },
 
+    // নির্দিষ্ট দিন আগের তারিখ
+    getDateDaysAgo: function (days) {
+        const date = new Date();
+        date.setDate(date.getDate() - days);
+        return date.toISOString().split('T')[0];
+    },
+
     // বর্তমান মাস ও বছর
     getCurrentMonthYear: function () {
         const now = new Date();
