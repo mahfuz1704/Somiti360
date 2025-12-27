@@ -132,7 +132,7 @@ const Investments = {
 
     // Summary update
     updateSummary: async function () {
-        document.getElementById('investmentTotal').textContent = Utils.formatCurrency(await this.getTotal());
+        document.getElementById('investmentTotal').textContent = Utils.formatCurrency(await this.getActiveTotal());
         document.getElementById('investmentProfit').textContent = Utils.formatCurrency(await this.getTotalProfit());
         document.getElementById('investmentLoss').textContent = Utils.formatCurrency(await this.getTotalLoss());
     },
