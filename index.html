@@ -631,6 +631,7 @@
                         <table class="data-table" id="usersTable">
                             <thead>
                                 <tr>
+                                    <th>ছবি</th>
                                     <th>নাম</th>
                                     <th>ইউজারনেম</th>
                                     <th>রোল</th>
@@ -674,7 +675,10 @@
             <div class="modal-body">
                 <div class="profile-view">
                     <div class="profile-header-centered">
-                        <div class="profile-avatar-large">👤</div>
+                        <div class="profile-avatar-large" id="profileAvatar">
+                            <img id="profilePhoto" src="" alt="Profile" style="display: none;">
+                            <span id="profileDefaultAvatar">👤</span>
+                        </div>
                         <h2 id="profileName">নাম</h2>
                         <span class="badge badge-info" id="profileRole">রোল</span>
                     </div>

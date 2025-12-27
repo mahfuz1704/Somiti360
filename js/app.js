@@ -137,8 +137,8 @@ const App = {
         const closeProfileBtn = document.getElementById('profileModalClose');
 
         if (openProfileBtn) {
-            openProfileBtn.addEventListener('click', () => {
-                this.loadProfileData();
+            openProfileBtn.addEventListener('click', async () => {
+                await this.loadProfileData();
                 profileModal.classList.add('active');
             });
         }
@@ -288,6 +288,11 @@ const App = {
 
             return `
                 <tr>
+                    <td>
+                        <div class="user-table-avatar">
+                            ${user.photo ? `<img src="${user.photo}" alt="Avatar">` : '👤'}
+                        </div>
+                    </td>
                     <td>${user.name}</td>
                     <td>${user.username}</td>
                     <td>
@@ -317,6 +322,18 @@ const App = {
     showAddUserForm: function () {
         const formHtml = `
             <form id="addUserForm">
+                <div class="form-group">
+                    <label>প্রোফাইল ছবি</label>
+                    <div class="photo-upload-container">
+                        <div class="photo-preview" id="photoPreview">
+                            <span>👤</span>
+                        </div>
+                        <div class="photo-upload-btn">
+                            <input type="file" id="userPhoto" accept="image/*" onchange="App.handlePhotoPreview(this, 'photoPreview')">
+                            <label for="userPhoto">📷 ছবি নির্বাচন করুন</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>নাম</label>
                     <input type="text" id="userName" required>
@@ -372,12 +389,20 @@ const App = {
             // Get selected permissions
             const permissions = Users.getSelectedPermissions();
 
+            // Get photo as base64
+            const photoInput = document.getElementById('userPhoto');
+            let photoBase64 = null;
+            if (photoInput.files && photoInput.files[0]) {
+                photoBase64 = await App.fileToBase64(photoInput.files[0]);
+            }
+
             const newUser = {
                 name: document.getElementById('userName').value,
                 username: document.getElementById('userUsername').value,
                 password: document.getElementById('userPassword').value,
                 role: document.getElementById('userRole').value,
-                permissions: permissions
+                permissions: permissions,
+                photo: photoBase64
             };
 
             if (await Users.add(newUser)) {
@@ -399,9 +424,22 @@ const App = {
         }
 
         const isSuperAdmin = user.username === 'superadmin';
+        const hasPhoto = user.photo && user.photo.length > 0;
 
         const formHtml = `
             <form id="editUserForm">
+                <div class="form-group">
+                    <label>প্রোফাইল ছবি</label>
+                    <div class="photo-upload-container">
+                        <div class="photo-preview ${hasPhoto ? 'has-photo' : ''}" id="editPhotoPreview">
+                            ${hasPhoto ? `<img src="${user.photo}" alt="Photo">` : '<span>👤</span>'}
+                        </div>
+                        <div class="photo-upload-btn">
+                            <input type="file" id="editUserPhoto" accept="image/*" onchange="App.handlePhotoPreview(this, 'editPhotoPreview')">
+                            <label for="editUserPhoto">📷 ছবি পরিবর্তন করুন</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>নাম</label>
                     <input type="text" id="editUserName" value="${user.name}" required>
@@ -427,7 +465,7 @@ const App = {
                 <div class="form-group">
                     <label>মেনু পারমিশন</label>
                     <div id="editPermissionsContainer">
-                        ${isSuperAdmin ? '<p class="text-muted">সুপার অ্যাডমিনের সকল পারমিশন রয়েছে।</p>' : Users.renderPermissionCheckboxes(permissions)}
+                        ${isSuperAdmin ? '<p class="text-muted">সুপার অ্যাডমিনের সকল পারমিশন রয়েছে।</p>' : Users.renderPermissionCheckboxes(permissions)}
                     </div>
                 </div>
 
@@ -450,6 +488,9 @@ const App = {
             });
         }
 
+        // Store original photo for comparison
+        const originalPhoto = user.photo;
+
         document.getElementById('editUserForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -462,6 +503,12 @@ const App = {
                 role: document.getElementById('editUserRole').value,
                 permissions: permsArray
             };
+
+            // Check if new photo selected
+            const photoInput = document.getElementById('editUserPhoto');
+            if (photoInput.files && photoInput.files[0]) {
+                updatedData.photo = await App.fileToBase64(photoInput.files[0]);
+            }
 
             const newPass = document.getElementById('editUserPassword').value;
             if (newPass) {
@@ -486,11 +533,61 @@ const App = {
     },
 
     // Profile Helpers
-    loadProfileData: function () {
-        const user = Auth.getCurrentUser();
-        if (user) {
-            document.getElementById('profileName').textContent = user.name;
-            document.getElementById('profileRole').textContent = user.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন';
+    loadProfileData: async function () {
+        const sessionUser = Auth.getCurrentUser();
+        if (!sessionUser) return;
+
+        // Fetch fresh user data from server
+        const user = await Users.getById(sessionUser.id);
+        if (!user) return;
+
+        // Update session with latest data
+        Auth.setSession(user);
+
+        // Update profile modal
+        document.getElementById('profileName').textContent = user.name;
+        document.getElementById('profileRole').textContent = user.role === 'superadmin' ? 'সুপার অ্যাডমিন' : user.role === 'admin' ? 'অ্যাডমিন' : 'ইউজার';
+
+        // Update sidebar name
+        const sidebarName = document.getElementById('currentUserName');
+        if (sidebarName) sidebarName.textContent = user.name;
+
+        // Update photo
+        const photoEl = document.getElementById('profilePhoto');
+        const defaultAvatar = document.getElementById('profileDefaultAvatar');
+
+        if (user.photo && user.photo.length > 0) {
+            photoEl.src = user.photo;
+            photoEl.style.display = 'block';
+            if (defaultAvatar) defaultAvatar.style.display = 'none';
+        } else {
+            photoEl.style.display = 'none';
+            if (defaultAvatar) defaultAvatar.style.display = 'block';
+        }
+    },
+
+    // File to Base64 converter
+    fileToBase64: function (file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    },
+
+    // Photo preview handler
+    handlePhotoPreview: function (input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                preview.classList.add('has-photo');
+            };
+            reader.readAsDataURL(input.files[0]);
         }
     },
 

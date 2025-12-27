@@ -37,6 +37,7 @@ const Users = {
             name: userData.name,
             username: userData.username.trim(),
             password: userData.password,
+            photo: userData.photo || null,
             role: userData.role || 'user',
             permissions: Array.isArray(userData.permissions) ? JSON.stringify(userData.permissions) : userData.permissions || '[]'
         };
