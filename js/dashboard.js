@@ -76,9 +76,12 @@ const Dashboard = {
         const totalExpenses = (expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const totalDonations = (donations || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
 
-        const totalExpenditure = totalExpenses + totalDonations;
+        const totalExpenditure = totalExpenses;
         const elExpenditure = document.getElementById('totalExpenditure');
         if (elExpenditure) elExpenditure.textContent = Utils.formatCurrency(totalExpenditure);
+
+        const elDonation = document.getElementById('totalDonation');
+        if (elDonation) elDonation.textContent = Utils.formatCurrency(totalDonations);
 
         // 4. Total Outstanding Loan Calculation (Unfiltered)
         const totalLoansDisbursed = (loans || []).reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
