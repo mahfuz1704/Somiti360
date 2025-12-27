@@ -1203,7 +1203,7 @@ body {
 
 .login-card {
     background: var(--white);
-    padding: 20px;
+    padding: 40px;
     border-radius: var(--radius-lg);
     width: 100%;
     max-width: 400px;
