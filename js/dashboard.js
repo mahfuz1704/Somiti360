@@ -322,10 +322,22 @@ const Dashboard = {
             return;
         }
 
-        container.innerHTML = pendingLoans.map(loan => `
+        // Aggregate by member (User Requirement: One row per member)
+        const aggregatedPending = Object.values(pendingLoans.reduce((acc, loan) => {
+            if (!acc[loan.member_id]) {
+                acc[loan.member_id] = {
+                    memberName: loan.memberName,
+                    totalOutstanding: 0
+                };
+            }
+            acc[loan.member_id].totalOutstanding += loan.outstanding;
+            return acc;
+        }, {}));
+
+        container.innerHTML = aggregatedPending.map(item => `
             <tr>
-                <td><strong>${loan.memberName}</strong></td>
-                <td>${Utils.formatCurrency(loan.outstanding)}</td>
+                <td><strong>${item.memberName}</strong></td>
+                <td>${Utils.formatCurrency(item.totalOutstanding)}</td>
             </tr>
         `).join('');
     },
