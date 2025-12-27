@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS activities (
     id VARCHAR(50) PRIMARY KEY,
     user_id VARCHAR(50),
     action TEXT NOT NULL,
+    old_values TEXT,
+    new_values TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
