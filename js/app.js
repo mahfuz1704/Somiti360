@@ -496,9 +496,10 @@ const App = {
         const confirmPass = document.getElementById('confirmPassword').value;
 
         const user = Auth.getCurrentUser();
-        const fullUser = await Users.getById(user.id); // Get with password
 
-        if (fullUser.password !== currentPass) {
+        // bcrypt hash দিয়ে password verify করা (API call)
+        const isValid = await Users.verifyPassword(user.id, currentPass);
+        if (!isValid) {
             Utils.showToast('বর্তমান পাসওয়ার্ড ভুল!', 'error');
             return;
         }

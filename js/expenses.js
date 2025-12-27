@@ -59,10 +59,11 @@ const Expenses = {
             title: expenseData.title,
             category: expenseData.category,
             amount: parseFloat(expenseData.amount),
+            date: expenseData.date,
             description: expenseData.description
         };
 
-        return await window.apiCall(`/expenses/${id}`, 'POST', updatedExpense);
+        return await window.apiCall(`/expenses/${id}`, 'PUT', updatedExpense);
     },
 
     // খরচ delete
@@ -250,6 +251,8 @@ const Expenses = {
             `<option value="${c}" ${c === expense.category ? 'selected' : ''}>${c}</option>`
         ).join('');
 
+        const expenseDate = expense.date ? new Date(expense.date).toISOString().split('T')[0] : '';
+
         const formHtml = `
             <form id="expenseForm" onsubmit="Expenses.handleUpdate(event, '${id}')">
                 <div class="form-group">
@@ -267,6 +270,10 @@ const Expenses = {
                         <label for="expenseAmount">পরিমাণ (টাকা) *</label>
                         <input type="number" id="expenseAmount" required value="${expense.amount}" min="1">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="expenseDate">তারিখ</label>
+                    <input type="date" id="expenseDate" value="${expenseDate}">
                 </div>
                 <div class="form-group">
                     <label for="expenseDescription">বিবরণ</label>
@@ -319,6 +326,7 @@ const Expenses = {
             title: document.getElementById('expenseTitle').value.trim(),
             category: document.getElementById('expenseCategory').value,
             amount: document.getElementById('expenseAmount').value,
+            date: document.getElementById('expenseDate').value,
             description: document.getElementById('expenseDescription').value.trim()
         };
 
