@@ -62,20 +62,22 @@ const Dashboard = {
         const elOutstanding = document.getElementById('totalOutstandingLoan');
         if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
 
-        // 5. Current Total Investments Calculation (Principal - Return Principal)
-        const totalInvestmentPrincipalOut = (investments || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-        const totalInvestmentPrincipalIn = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.principal_amount) || 0), 0);
-        const activeInvestments = totalInvestmentPrincipalOut - totalInvestmentPrincipalIn;
+        // 5. Current Total Investments Calculation (Total of ACTIVE investments)
+        const activeInvestmentsList = (investments || []).filter(i => (i.status || 'active').toLowerCase() === 'active');
+        const activeInvestmentsTotal = activeInvestmentsList.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
         const elInvestments = document.getElementById('currentTotalInvestments');
-        if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestments);
+        if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestmentsTotal);
 
         // 6. Current Balance (Cash In Hand) Calculation
-        // In: Deposits + Opening Balance + Loan Collections + Investment Profit + Income
-        // Out: Expenses + Donations + Loans Disbursed + Investments (Principal)
-        const investmentProfitAmount = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.profit_amount) || 0), 0);
+        // In: Deposits + Opening Balance + Loan Collections + Investment Net Return (Profit/Loss) + Income
+        // Out: Expenses + Donations + Loans Disbursed + ACTIVE Investments (Principal currently out)
 
-        const totalCashIn = totalDeposits + totalLoanCollections + investmentProfitAmount + totalIncome;
-        const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + totalInvestmentPrincipalOut;
+        // Investment returns table stores profit as positive and loss as negative in 'amount' column
+        const investmentNetReturn = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+
+        const totalCashIn = totalDeposits + totalLoanCollections + investmentNetReturn + totalIncome;
+        const totalCashOut = totalExpenses + totalDonations + totalLoansDisbursed + activeInvestmentsTotal;
 
         const balance = totalCashIn - totalCashOut;
         document.getElementById('currentBalance').textContent = Utils.formatCurrency(balance);
