@@ -353,3 +353,5 @@ const Members = {
         ).join('');
     }
 };
+
+window.Members = Members;

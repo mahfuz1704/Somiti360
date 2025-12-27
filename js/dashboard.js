@@ -6,10 +6,30 @@
 const Dashboard = {
     // Dashboard refresh
     refresh: async function () {
-        await this.updateStats();
-        await this.updateRecentActivities();
-        await this.updateMonthlyDeposits();
-        await this.updatePendingLoans();
+        try {
+            await this.updateStats();
+        } catch (e) {
+            console.error('Error updating stats:', e);
+        }
+
+        try {
+            await this.updateRecentActivities();
+        } catch (e) {
+            console.error('Error updating recent activities:', e);
+        }
+
+        try {
+            await this.updateMonthlyDeposits();
+        } catch (e) {
+            console.error('Error updating monthly deposits:', e);
+        }
+
+        try {
+            await this.updatePendingLoans();
+        } catch (e) {
+            console.error('Error updating pending loans:', e);
+        }
+
         this.updateDate();
     },
 
@@ -319,38 +339,4 @@ const Dashboard = {
     }
 };
 
-/**
- * Activities - কার্যক্রম log
- */
-const Activities = {
-    // সব activities লোড
-    getAll: async function () {
-        const data = await window.apiCall('/activities') || [];
-        // Map DB columns to our frontend object format
-        return data.map(item => ({
-            id: item.id,
-            type: item.type,
-            message: item.action,
-            date: item.timestamp || item.created_at
-        })).filter(a => a.message).sort((a, b) => new Date(b.date) - new Date(a.date));
-    },
-
-    // নতুন activity যোগ
-    add: async function (type, message) {
-        const user = typeof Auth !== 'undefined' ? Auth.getCurrentUser() : null;
-        const activity = {
-            id: Date.now().toString(),
-            type: type,
-            action: message,
-            user_id: user ? user.id : null
-        };
-
-        return await window.apiCall('/activities', 'POST', activity);
-    },
-
-    // সাম্প্রতিক activities
-    getRecent: async function (count = 10) {
-        const all = await this.getAll();
-        return all.slice(0, count);
-    }
-};
+window.Dashboard = Dashboard;
