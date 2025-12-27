@@ -1,0 +1,4 @@
+- [x] বিনিয়োগ লাভ/ক্ষতি প্রদর্শনের সমস্যা সমাধান (Fix Investment Returns Display) ✅
+    - [x] `js/investments.js` ফাইলে `/returns` এর পরিবর্তে `/investment_returns` ব্যবহার করা ✅
+    - [x] এপিআই কল যাচাই করা ✅
+    - [x] ডাটা রেন্ডারিং যাচাই করা ✅

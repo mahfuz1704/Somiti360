@@ -47,3 +47,11 @@
 
 ### ৫. showReturnForm এ ভুল লাভ/ক্ষতি display
 - **সমাধান**: amount দিয়ে সঠিকভাবে লাভ/ক্ষতি নির্ণয় করা হয়েছে
+
+### ৬. Profit/loss API endpoint ভুল ছিল
+- **সমস্যা**: `/returns` endpoint কল করা হচ্ছিল যা forbidden
+- **সমাধান**: `/investment_returns` endpoint এ পরিবর্তন করা হয়েছে
+
+### ৭. addReturn এ ID ছিল না
+- **সমস্যা**: Database এ ID ফিল্ড-এ default value নেই বলে ৫০০ error আসছিল
+- **সমাধান**: Frontend থেকে unique ID জেনারেট করে পাঠানো হচ্ছে
