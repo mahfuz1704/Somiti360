@@ -89,42 +89,25 @@ const Dashboard = {
 
     // Recent activities update
     updateRecentActivities: async function () {
-        const activities = await Activities.getRecent(6);
+        const activities = await window.Activities.getRecent(6);
         const container = document.getElementById('recentActivities');
 
-        if (activities.length === 0) {
+        if (!activities || activities.length === 0) {
             container.innerHTML = '<li class="empty-state">কোনো কার্যক্রম নেই</li>';
             return;
         }
 
         container.innerHTML = activities.map(activity => {
-            const icon = this.getActivityIcon(activity.type);
+            const icon = window.Activities.getIcon(activity.type);
+            const date = new Date(activity.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
             return `
                 <li>
                     <span>${icon}</span>
-                    <span>${activity.message}</span>
-                    <small style="color: #999; margin-left: auto;">${Utils.formatDateShort(activity.date)}</small>
+                    <span>${activity.action}</span>
+                    <small style="color: #999; margin-left: auto;">${date}</small>
                 </li>
             `;
         }).join('');
-    },
-
-
-
-    // Activity icon
-    getActivityIcon: function (type) {
-        const icons = {
-            'member_add': '👤',
-            'member_delete': '❌',
-            'deposit_add': '💰',
-            'investment_add': '📈',
-            'return_add': '💹',
-            'donation_add': '🤝',
-            'expense_add': '💸',
-            'loan_add': '🏦',
-            'loan_payment': '💳'
-        };
-        return icons[type] || '📌';
     },
 
     // Monthly Deposits Update (Full Statement)

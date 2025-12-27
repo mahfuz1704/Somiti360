@@ -5,7 +5,7 @@
 
 const Activities = {
     // অ্যাক্টিভিটি যোগ করা
-    add: async function (action, description, oldValues = null, newValues = null) {
+    add: async function (type, description, oldValues = null, newValues = null) {
         const user = Auth.getCurrentUser();
         if (!user) return;
 
@@ -13,11 +13,41 @@ const Activities = {
             id: Utils.generateId(),
             user_id: user.id,
             action: description,
-            old_values: oldValues ? JSON.stringify(oldValues) : null,
-            new_values: newValues ? JSON.stringify(newValues) : null
+            type: type,
+            old_values: oldValues ? (typeof oldValues === 'object' ? JSON.stringify(oldValues) : oldValues) : null,
+            new_values: newValues ? (typeof newValues === 'object' ? JSON.stringify(newValues) : newValues) : null
         };
 
         return await window.apiCall('/activities', 'POST', activityData);
+    },
+
+    // আইকন পাওয়া
+    getIcon: function (type) {
+        const icons = {
+            'login': '🔑',
+            'logout': '🚪',
+            'member_add': '👤',
+            'member_edit': '📝',
+            'member_delete': '🗑️',
+            'deposit_add': '💰',
+            'deposit_edit': '📝',
+            'deposit_delete': '🗑️',
+            'loan_add': '🏦',
+            'loan_edit': '📝',
+            'loan_delete': '🗑️',
+            'loan_payment': '💳',
+            'investment_add': '📈',
+            'investment_edit': '📝',
+            'investment_delete': '🗑️',
+            'income_add': '💵',
+            'income_edit': '📝',
+            'income_delete': '🗑️',
+            'expense_add': '💸',
+            'expense_edit': '📝',
+            'expense_delete': '🗑️',
+            'donation_add': '🤝'
+        };
+        return icons[type] || '📌';
     },
 
     // সাম্প্রতিক অ্যাক্টিভিটি নিয়ে আসা (ড্যাশবোর্ডের জন্য)
