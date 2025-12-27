@@ -289,7 +289,7 @@ const Loans = {
                         <input type="number" id="loanAmount" required min="1" placeholder="০">
                     </div>
                     <div class="form-group">
-                        <label for="loanInterest">সুদের হার (%)</label>
+                        <label for="loanInterest">বিলম্ব ফি (%)</label>
                         <input type="number" id="loanInterest" value="0" min="0" max="100" step="0.5">
                     </div>
                 </div>
@@ -341,7 +341,7 @@ const Loans = {
                         <input type="number" id="editLoanAmount" required min="1" value="${loan.amount}">
                     </div>
                     <div class="form-group">
-                        <label for="editLoanInterest">সুদের হার (%)</label>
+                        <label for="editLoanInterest">বিলম্ব ফি (%)</label>
                         <input type="number" id="editLoanInterest" value="${loan.interest_rate}" min="0" max="100" step="0.5">
                     </div>
                 </div>
@@ -480,7 +480,7 @@ const Loans = {
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                     <div><strong>মূল লোন:</strong> ${Utils.formatCurrency(loan.amount)}</div>
-                    <div><strong>সুদের হার:</strong> ${loan.interest_rate}%</div>
+                    <div><strong>বিলম্ব ফি:</strong> ${loan.interest_rate}%</div>
                     <div><strong>মেয়াদ:</strong> ${loan.term_months} মাস</div>
                     <div><strong>মাসিক কিস্তি:</strong> ${Utils.formatCurrency(loan.monthly_payment)}</div>
                     <div><strong>শুরুর তারিখ:</strong> ${Utils.formatDateShort(loan.start_date)}</div>

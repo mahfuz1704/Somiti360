@@ -124,7 +124,7 @@ const Activities = {
             'month': 'মাস',
             'year': 'বছর',
             'notes': 'নোটস',
-            'interest_rate': 'সুদের হার (%)',
+            'interest_rate': 'বিলম্ব ফি (%)',
             'term_months': 'মেয়াদ (মাস)',
             'monthly_payment': 'মাসিক কিস্তি',
             'start_date': 'শুরুর তারিখ',
