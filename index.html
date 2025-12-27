@@ -184,23 +184,28 @@
                     <!-- Left Column -->
                     <div class="dashboard-col">
                         <!-- বকেয়া লোন -->
-                        <div class="card mb-4">
-                            <h3>বকেয়া লোন</h3>
-                            <div class="table-responsive">
-                                <table class="data-table" id="pendingLoansTable">
-                                    <thead>
-                                        <tr>
-                                            <th>সদস্য</th>
-                                            <th>বকেয়া</th>
+                        <div class="card mb-4 collapsible-card">
+                            <div class="card-header-collapsible" onclick="Dashboard.togglePendingLoans()">
+                                <h3>চলমান বকেয়া লোন</h3>
+                                <span class="collapse-icon" id="pendingLoansIcon"></span>
+                            </div>
+                            <div class="collapsible-content collapsed" id="pendingLoansContent">
+                                <div class="table-responsive">
+                                    <table class="data-table" id="pendingLoansTable">
+                                        <thead>
+                                            <tr>
+                                                <th>সদস্য</th>
+                                                <th>বকেয়া</th>
 
-                                        </tr>
-                                    </thead>
-                                    <tbody id="pendingLoansList">
-                                        <tr class="empty-row">
-                                            <td colspan="2">কোনো বকেয়া লোন নেই</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pendingLoansList">
+                                            <tr class="empty-row">
+                                                <td colspan="2">কোনো বকেয়া লোন নেই</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 

@@ -348,6 +348,17 @@ const Dashboard = {
         if (dateElement) {
             dateElement.textContent = Utils.formatDate(new Date());
         }
+    },
+
+    // Toggle pending loans section expand/collapse
+    togglePendingLoans: function () {
+        const content = document.getElementById('pendingLoansContent');
+        const icon = document.getElementById('pendingLoansIcon');
+
+        if (content && icon) {
+            content.classList.toggle('collapsed');
+            icon.classList.toggle('expanded');
+        }
     }
 };
 

@@ -1550,3 +1550,64 @@ body {
 #page-dashboard .data-table td:has(.btn) {
     text-align: center;
 }
+
+/* Collapsible Card Styles */
+.collapsible-card {
+    overflow: hidden;
+}
+
+.card-header-collapsible {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gray-100);
+    margin-bottom: 0;
+    transition: var(--transition);
+}
+
+.card-header-collapsible:hover {
+    background: var(--gray-50);
+    margin: -24px -24px 0 -24px;
+    padding: 24px 24px 12px 24px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.card-header-collapsible h3 {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.collapse-icon {
+    width: 12px;
+    height: 12px;
+    border-right: 3px solid var(--gray-500);
+    border-bottom: 3px solid var(--gray-500);
+    border-radius: 2px;
+    transform: rotate(-45deg);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.card-header-collapsible:hover .collapse-icon {
+    border-color: var(--primary);
+}
+
+.collapse-icon.expanded {
+    transform: rotate(45deg);
+    border-color: var(--primary);
+}
+
+.collapsible-content {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    padding-top: 16px;
+}
+
+.collapsible-content.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    overflow: hidden;
+}
