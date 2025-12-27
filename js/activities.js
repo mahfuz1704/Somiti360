@@ -27,23 +27,23 @@ const Activities = {
             'login': '🔑',
             'logout': '🚪',
             'member_add': '👤',
-            'member_edit': '📝',
+            'member_update': '📝',
             'member_delete': '🗑️',
             'deposit_add': '💰',
-            'deposit_edit': '📝',
+            'deposit_update': '📝',
             'deposit_delete': '🗑️',
             'loan_add': '🏦',
-            'loan_edit': '📝',
+            'loan_update': '📝',
             'loan_delete': '🗑️',
             'loan_payment': '💳',
             'investment_add': '📈',
-            'investment_edit': '📝',
+            'investment_update': '📝',
             'investment_delete': '🗑️',
             'income_add': '💵',
-            'income_edit': '📝',
+            'income_update': '📝',
             'income_delete': '🗑️',
             'expense_add': '💸',
-            'expense_edit': '📝',
+            'expense_update': '📝',
             'expense_delete': '🗑️',
             'donation_add': '🤝'
         };
@@ -72,7 +72,8 @@ const Activities = {
         }
 
         container.innerHTML = activities.map(activity => {
-            const date = new Date(activity.created_at).toLocaleString('bn-BD');
+            const dateStr = activity.created_at || activity.timestamp || new Date();
+            const date = new Date(dateStr).toLocaleString('bn-BD');
             const hasDetails = activity.old_values || activity.new_values;
 
             return `
@@ -104,7 +105,7 @@ const Activities = {
         let content = `
             <div class="activity-details">
                 <p><strong>ইউজার:</strong> ${activity.user_name || 'সিস্টেম'}</p>
-                <p><strong>সময়:</strong> ${new Date(activity.created_at).toLocaleString('bn-BD')}</p>
+                <p><strong>সময়:</strong> ${new Date(activity.created_at || activity.timestamp || new Date()).toLocaleString('bn-BD')}</p>
                 <p><strong>কাজ:</strong> ${activity.action}</p>
                 <hr>
                 <div class="diff-container">

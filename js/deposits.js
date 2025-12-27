@@ -47,7 +47,7 @@ const Deposits = {
         if (result) {
             // Activity log
             const member = await Members.getById(depositData.memberId);
-            await Activities.add('deposit_add', `${member?.name || 'সদস্য'} ${Utils.formatCurrency(newDeposit.amount)} জমা দিয়েছে`);
+            await Activities.add('deposit_add', `${member?.name || 'সদস্য'} ${Utils.formatCurrency(newDeposit.amount)} জমা দিয়েছে`, null, newDeposit);
 
             // Dashboard Update
             if (window.Dashboard) await Dashboard.refresh();
@@ -58,9 +58,12 @@ const Deposits = {
 
     // জমা delete
     delete: async function (id) {
+        const deposit = await this.getById(id);
         const result = await window.apiCall(`/deposits/${id}`, 'DELETE');
 
-        if (result && result.success) {
+        if (result && result.success && deposit) {
+            const member = await Members.getById(deposit.member_id);
+            await Activities.add('deposit_delete', `${member?.name || 'সদস্য'} এর ${Utils.formatCurrency(deposit.amount)} এর আমানত মুছে ফেলা হয়েছে`, deposit, null);
             // Dashboard Update
             if (window.Dashboard) await Dashboard.refresh();
         }
@@ -285,3 +288,5 @@ const Deposits = {
         }
     }
 };
+
+window.Deposits = Deposits;

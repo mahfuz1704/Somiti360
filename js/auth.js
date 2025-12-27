@@ -19,6 +19,10 @@ const Auth = {
 
             if (data.success) {
                 this.setSession(data.user);
+                // লগ যোগ করা
+                if (window.Activities) {
+                    Activities.add('login', 'সিস্টেমে লগইন করেছেন');
+                }
                 return { success: true };
             } else {
                 return { success: false, message: data.message || 'ভুল ইউজারনেম বা পাসওয়ার্ড!' };
@@ -30,7 +34,11 @@ const Auth = {
     },
 
     // লগআউট
-    logout: function () {
+    logout: async function () {
+        // লগ যোগ করা
+        if (window.Activities) {
+            await Activities.add('logout', 'সিস্টেম থেকে লগআউট করেছেন');
+        }
         sessionStorage.removeItem('shopno_session');
         window.location.reload();
     },

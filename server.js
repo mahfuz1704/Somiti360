@@ -137,8 +137,21 @@ app.get('/api/:table', async (req, res) => {
         }
 
         // প্রতিটি টেবিলের জন্য সঠিক ORDER BY কলাম
-        const orderColumn = table === 'activities' ? 'timestamp' : 'created_at';
-        const [rows] = await pool.query(`SELECT * FROM ${table} ORDER BY ${orderColumn} DESC`);
+        const orderColumn = table === 'activities' ? 'created_at' : 'created_at';
+
+        let query = `SELECT * FROM ${table} ORDER BY ${orderColumn} DESC`;
+
+        // যদি activities টেবিল হয়, তবে ইউজারের নাম জয়েন করে আনা হবে
+        if (table === 'activities') {
+            query = `
+                SELECT a.*, u.name as user_name 
+                FROM activities a 
+                LEFT JOIN users u ON a.user_id = u.id 
+                ORDER BY a.created_at DESC
+            `;
+        }
+
+        const [rows] = await pool.query(query);
         res.json(rows);
     } catch (err) {
         console.error(`Error fetching from ${req.params.table}:`, err.message);

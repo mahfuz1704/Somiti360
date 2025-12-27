@@ -35,7 +35,7 @@ const Investments = {
         const result = await window.apiCall('/investments', 'POST', newInvestment);
 
         if (result) {
-            Activities.add('investment_add', `নতুন বিনিয়োগ: ${newInvestment.title} (${Utils.formatCurrency(newInvestment.amount)})`);
+            await Activities.add('investment_add', `নতুন বিনিয়োগ: ${newInvestment.title} (${Utils.formatCurrency(newInvestment.amount)})`, null, newInvestment);
         }
 
         return result;
@@ -43,6 +43,7 @@ const Investments = {
 
     // বিনিয়োগ update
     update: async function (id, investmentData) {
+        const oldInvestment = await this.getById(id);
         const updatedInvestment = {
             title: investmentData.title,
             type: investmentData.category,
@@ -52,12 +53,20 @@ const Investments = {
             description: investmentData.description
         };
 
-        return await window.apiCall(`/investments/${id}`, 'PUT', updatedInvestment);
+        const result = await window.apiCall(`/investments/${id}`, 'PUT', updatedInvestment);
+        if (result && oldInvestment) {
+            await Activities.add('investment_update', `বিনিয়োগ '${oldInvestment.title}' এর তথ্য আপডেট করা হয়েছে`, oldInvestment, { ...oldInvestment, ...updatedInvestment });
+        }
+        return result;
     },
 
     // বিনিয়োগ delete
     delete: async function (id) {
+        const investment = await this.getById(id);
         const result = await window.apiCall(`/investments/${id}`, 'DELETE');
+        if (result && result.success && investment) {
+            await Activities.add('investment_delete', `বিনিয়োগ মুছে ফেলা হয়েছে: ${investment.title}`, investment, null);
+        }
         return result && result.success;
     },
 
@@ -81,7 +90,7 @@ const Investments = {
         if (result) {
             const investment = await this.getById(returnData.investmentId);
             const typeText = returnData.type === 'profit' ? 'লাভ' : 'ক্ষতি';
-            Activities.add('return_add', `${investment?.title || 'বিনিয়োগ'} থেকে ${typeText}: ${Utils.formatCurrency(Math.abs(newReturn.amount))}`);
+            await Activities.add('return_add', `${investment?.title || 'বিনিয়োগ'} থেকে ${typeText}: ${Utils.formatCurrency(Math.abs(newReturn.amount))}`, null, newReturn);
         }
 
         return result;
@@ -417,3 +426,5 @@ const Investments = {
         }
     }
 };
+
+window.Investments = Investments;

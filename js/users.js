@@ -115,6 +115,7 @@ const Users = {
             { id: 'investments', name: 'বিনিয়োগ ব্যবস্থাপনা' },
             { id: 'members', name: 'সদস্য ব্যবস্থাপনা' },
             { id: 'reports', name: 'রিপোর্ট' },
+            { id: 'activities', name: 'কার্যলিপি' },
             { id: 'users', name: 'অ্যাডমিন প্যানেল' }
         ];
     },

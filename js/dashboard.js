@@ -38,31 +38,37 @@ const Dashboard = {
             window.apiCall('/income')
         ]);
 
-        // 1. Total Deposits Calculation
+        // ২০২৬ এর ফিল্টার প্রয়োগ (শুধু জমার জন্য - ইউজার রিকোয়ারমেন্ট অনুযায়ী)
+        const filterYear = 2026;
+
+        // 1. Total Deposits Calculation (Filtered by year >= 2026)
         const totalOpeningBalance = (members || []).reduce((sum, m) => sum + (parseFloat(m.opening_balance) || 0), 0);
-        const totalDepositAmount = (deposits || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+        const validDeposits = (deposits || []).filter(d => (parseInt(d.year) || 0) >= filterYear);
+        const totalDepositAmount = validDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
         const totalDeposits = totalDepositAmount + totalOpeningBalance;
         document.getElementById('totalDeposits').textContent = Utils.formatCurrency(totalDeposits);
 
-        // 3. Total Income & Expenditure Calculation
+        // 3. Total Income & Expenditure Calculation (Unfiltered)
         const totalIncome = (income || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
         const elIncome = document.getElementById('totalIncome');
         if (elIncome) elIncome.textContent = Utils.formatCurrency(totalIncome);
 
         const totalExpenses = (expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const totalDonations = (donations || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+
         const totalExpenditure = totalExpenses + totalDonations;
         const elExpenditure = document.getElementById('totalExpenditure');
         if (elExpenditure) elExpenditure.textContent = Utils.formatCurrency(totalExpenditure);
 
-        // 4. Total Outstanding Loan Calculation
+        // 4. Total Outstanding Loan Calculation (Unfiltered)
         const totalLoansDisbursed = (loans || []).reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
         const totalLoanCollections = (loanPayments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
         const totalOutstanding = totalLoansDisbursed - totalLoanCollections;
         const elOutstanding = document.getElementById('totalOutstandingLoan');
         if (elOutstanding) elOutstanding.textContent = Utils.formatCurrency(totalOutstanding);
 
-        // 5. Current Total Investments Calculation (Total of ACTIVE investments)
+        // 5. Current Total Investments Calculation (Total of ACTIVE investments - Unfiltered)
         const activeInvestmentsList = (investments || []).filter(i => (i.status || 'active').toLowerCase() === 'active');
         const activeInvestmentsTotal = activeInvestmentsList.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
@@ -70,10 +76,8 @@ const Dashboard = {
         if (elInvestments) elInvestments.textContent = Utils.formatCurrency(activeInvestmentsTotal);
 
         // 6. Current Balance (Cash In Hand) Calculation
-        // In: Deposits + Opening Balance + Loan Collections + Investment Net Return (Profit/Loss) + Income
-        // Out: Expenses + Donations + Loans Disbursed + ACTIVE Investments (Principal currently out)
-
-        // Investment returns table stores profit as positive and loss as negative in 'amount' column
+        // In: Filtered Deposits + Opening Balance + Loan Collections + Net Investment Returns + Income
+        // Out: Expenses + Donations + Loans Disbursed + ACTIVE Investments
         const investmentNetReturn = (investmentReturns || []).reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
 
         const totalCashIn = totalDeposits + totalLoanCollections + investmentNetReturn + totalIncome;
@@ -99,7 +103,8 @@ const Dashboard = {
 
         container.innerHTML = activities.map(activity => {
             const icon = window.Activities.getIcon(activity.type);
-            const date = new Date(activity.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = activity.created_at || activity.timestamp || new Date();
+            const date = new Date(dateStr).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
             return `
                 <li>
                     <span>${icon}</span>

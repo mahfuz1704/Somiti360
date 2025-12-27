@@ -235,6 +235,9 @@ const App = {
             case 'reports':
                 document.getElementById('reportOutput').style.display = 'none';
                 break;
+            case 'activities':
+                await Activities.render();
+                break;
             case 'users':
                 await this.renderUsersTable();
                 break;
@@ -274,6 +277,7 @@ const App = {
                     'expenses': 'ব্যয় ব্যবস্থাপনা',
                     'income': 'আয় ও রাজস্ব',
                     'reports': 'রিপোর্ট',
+                    'activities': 'কার্যলিপি',
                     'users': 'অ্যাডমিন প্যানেল'
                 };
                 perms = permissions.map(p => map[p] || p).join(', ');

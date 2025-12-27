@@ -96,6 +96,10 @@
                     <span class="nav-icon">📋</span>
                     <span class="nav-text">রিপোর্ট</span>
                 </li>
+                <li class="nav-item" data-page="activities">
+                    <span class="nav-icon">📜</span>
+                    <span class="nav-text">কার্যলিপি</span>
+                </li>
                 <li class="nav-item" data-page="users" style="display: none;">
                     <span class="nav-icon">🔐</span>
                     <span class="nav-text">অ্যাডমিন প্যানেল</span>
@@ -581,6 +585,33 @@
                     <div id="reportContent"></div>
                 </div>
             </section>
+            <!-- Activities Page -->
+            <section class="page" id="page-activities">
+                <div class="page-header">
+                    <h2>কার্যলিপি (Activity Log)</h2>
+                    <div class="header-actions">
+                        <!-- Future: Filter/Search -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>সময়</th>
+                                    <th>ব্যবহারকারী</th>
+                                    <th>কাজ</th>
+                                    <th class="text-center">অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activitiesList">
+                                <!-- Dynamic Content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
             <!-- Users Page (Admin Only) -->
             <section class="page" id="page-users">
                 <div class="page-header">
@@ -682,6 +713,7 @@
     <script src="js/loans.js"></script>
     <script src="js/expenses.js"></script>
     <script src="js/income.js"></script>
+    <script src="js/activities.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/reports.js"></script>
     <script src="js/app.js"></script>
