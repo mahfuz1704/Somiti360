@@ -11,7 +11,7 @@ const Investments = {
 
     // সব returns লোড
     getAllReturns: async function () {
-        return await window.apiCall('/returns') || [];
+        return await window.apiCall('/investment_returns') || [];
     },
 
     // ID দিয়ে বিনিয়োগ খোঁজা
@@ -69,13 +69,14 @@ const Investments = {
         }
 
         const newReturn = {
+            id: Date.now().toString(),
             investment_id: returnData.investmentId,
             amount: amount,
             date: returnData.date || Utils.getCurrentDate(),
             notes: returnData.note || ''
         };
 
-        const result = await window.apiCall('/returns', 'POST', newReturn);
+        const result = await window.apiCall('/investment_returns', 'POST', newReturn);
 
         if (result) {
             const investment = await this.getById(returnData.investmentId);
@@ -86,9 +87,8 @@ const Investments = {
         return result;
     },
 
-    // Return delete
     deleteReturn: async function (id) {
-        const result = await window.apiCall(`/returns/${id}`, 'DELETE');
+        const result = await window.apiCall(`/investment_returns/${id}`, 'DELETE');
         return result && result.success;
     },
 

@@ -1,0 +1,7 @@
+- [ ] ব্রাউজার দিয়ে বিনিয়োগ ব্যবস্থাপনা সেকশন টেস্ট করা (Browser Testing Investment Management)
+    - [ ] ওয়েবসাইট ওপেন করা ও লগইন করা (Open & Login)
+    - [ ] বিনিয়োগ মেনুতে ক্লিক করা (Navigate to Investments)
+    - [ ] নতুন বিনিয়োগ যোগ করা (Add New Investment)
+    - [ ] বিদ্যমান বিনিয়োগ এডিট করা (Edit Investment)
+    - [ ] লাভ/ক্ষতি (Return) এন্ট্রি দেওয়া (Add Profit/Loss)
+    - [ ] ডাটা প্রদর্শিত হচ্ছে কিনা তা যাচাই করা (Verify Data Display)
